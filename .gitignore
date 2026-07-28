@@ -1,0 +1,31 @@
+# Python (backend/)
+__pycache__/
+*.pyc
+backend/.venv/
+backend/.venv312/
+backend/.env
+*.db
+.pytest_cache/
+.ruff_cache/
+
+# Backend generated storage (folder structure kept via .gitkeep)
+backend/storage/uploads/*
+backend/storage/generated_reports/*
+backend/storage/generated_protocols/*
+backend/storage/generated_traceability/*
+backend/storage/generated_risk_assessments/*
+backend/storage/evidence/*
+backend/storage/attachments/*
+backend/storage/archives/*
+backend/storage/chroma/*
+!backend/storage/**/.gitkeep
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/*.local
+
+# OS / editor
+.DS_Store
+.idea/
