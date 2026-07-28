@@ -35,8 +35,10 @@ logger = logging.getLogger("cqvip")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if settings.is_development:
-        init_db()
+    # create_all() only creates tables that don't exist yet -- safe to run
+    # every startup regardless of environment, since schema changes in this
+    # app go through non-destructive ALTER TABLE rather than Alembic revisions.
+    init_db()
     yield
 
 
