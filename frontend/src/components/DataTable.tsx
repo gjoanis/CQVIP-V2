@@ -48,34 +48,36 @@ export function DataTable<T>({ columns, rows, rowKey, emptyMessage = "No records
   }
 
   return (
-    <table className="data-table">
-      <thead>
-        <tr>
-          {columns.map((col) => (
-            <th
-              key={col.header}
-              className={col.sortValue ? "sortable" : undefined}
-              onClick={() => handleHeaderClick(col)}
-            >
-              {col.header}
-              {col.sortValue && (
-                <span className="sort-indicator">
-                  {sortHeader === col.header ? (sortDirection === "asc" ? " ▲" : " ▼") : " ⇅"}
-                </span>
-              )}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {sortedRows.map((row) => (
-          <tr key={rowKey(row)}>
+    <div className="data-table-scroll">
+      <table className="data-table">
+        <thead>
+          <tr>
             {columns.map((col) => (
-              <td key={col.header}>{col.render(row)}</td>
+              <th
+                key={col.header}
+                className={col.sortValue ? "sortable" : undefined}
+                onClick={() => handleHeaderClick(col)}
+              >
+                {col.header}
+                {col.sortValue && (
+                  <span className="sort-indicator">
+                    {sortHeader === col.header ? (sortDirection === "asc" ? " ▲" : " ▼") : " ⇅"}
+                  </span>
+                )}
+              </th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {sortedRows.map((row) => (
+            <tr key={rowKey(row)}>
+              {columns.map((col) => (
+                <td key={col.header}>{col.render(row)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

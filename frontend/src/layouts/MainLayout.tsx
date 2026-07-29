@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { ProjectSelector } from "../components/ProjectSelector";
@@ -109,11 +109,19 @@ function getInitials(name: string | undefined): string {
 
 export function MainLayout() {
   const { user, logout } = useAuth();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const location = useLocation();
+
+  // Close the mobile drawer whenever the route changes (i.e. after tapping a nav link).
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
 
   return (
     <CurrentProjectProvider>
       <div className="app-shell">
-        <aside className="sidebar">
+        {mobileNavOpen && <div className="sidebar-overlay" onClick={() => setMobileNavOpen(false)} />}
+        <aside className={"sidebar" + (mobileNavOpen ? " mobile-open" : "")}>
           <div className="sidebar-brand">CQVIP</div>
           <nav className="sidebar-nav">
             <NavLink to="/" end className={({ isActive }) => "sidebar-link" + (isActive ? " active" : "")}>
@@ -126,6 +134,14 @@ export function MainLayout() {
         </aside>
         <div className="app-main">
           <header className="app-header">
+            <button
+              type="button"
+              className="sidebar-toggle"
+              aria-label="Toggle navigation"
+              onClick={() => setMobileNavOpen((v) => !v)}
+            >
+              ☰
+            </button>
             <ProjectSelector />
             <div className="app-header-user" data-initials={getInitials(user?.full_name)}>
               <span>{user?.full_name}</span>
