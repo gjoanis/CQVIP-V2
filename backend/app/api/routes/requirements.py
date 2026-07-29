@@ -6,10 +6,11 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.ai.requirement_assessment import RequirementAssessment
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db, require_project_owner, verify_project_access
 from app.config import get_settings
 from app.models.attachment import Attachment
 from app.models.enums import RequirementDisposition, RequirementPriority, RequirementStatus
+from app.models.user import User
 from app.repositories.attachment_repository import AttachmentRepository
 from app.repositories.requirement_repository import RequirementRepository
 from app.services.requirement_service import RequirementService
@@ -70,7 +71,7 @@ class ProtocolOut(BaseModel):
 
 
 @router.get("", response_model=list[RequirementOut])
-def list_requirements(project_id: str, db: Session = Depends(get_db)):
+def list_requirements(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     return RequirementService(db).list_for_project(project_id)
 
 
@@ -80,7 +81,10 @@ def get_requirement(requirement_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=RequirementOut)
-def create_requirement(payload: RequirementIn, db: Session = Depends(get_db)):
+def create_requirement(
+    payload: RequirementIn, current_user: User = Depends(get_current_user), db: Session = Depends(get_db),
+):
+    verify_project_access(payload.project_id, current_user, db)
     return RequirementService(db).create(**payload.model_dump())
 
 

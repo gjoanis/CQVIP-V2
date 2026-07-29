@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db, require_project_owner, verify_project_access
 from app.models.enums import SystemType
+from app.models.user import User
 from app.services.system_service import SystemService
 
 router = APIRouter(prefix="/systems", tags=["systems"])
@@ -25,12 +26,13 @@ class SystemOut(SystemIn):
 
 
 @router.get("", response_model=list[SystemOut])
-def list_systems(project_id: str, db: Session = Depends(get_db)):
+def list_systems(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     return SystemService(db).list_for_project(project_id)
 
 
 @router.post("", response_model=SystemOut)
-def create_system(payload: SystemIn, db: Session = Depends(get_db)):
+def create_system(payload: SystemIn, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    verify_project_access(payload.project_id, current_user, db)
     return SystemService(db).create(**payload.model_dump())
 
 

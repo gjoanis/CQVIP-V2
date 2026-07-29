@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db, require_project_owner, verify_project_access
 from app.models.enums import ValidationActivityType, ValidationStatus
+from app.models.user import User
 from app.services.validation_service import ValidationService
 
 router = APIRouter(prefix="/validation-activities", tags=["validation-activities"])
@@ -39,12 +40,15 @@ class ValidationActivityOut(ValidationActivityIn):
 
 
 @router.get("", response_model=list[ValidationActivityOut])
-def list_activities(project_id: str, db: Session = Depends(get_db)):
+def list_activities(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     return ValidationService(db).list_for_project(project_id)
 
 
 @router.post("", response_model=ValidationActivityOut)
-def create_activity(payload: ValidationActivityIn, db: Session = Depends(get_db)):
+def create_activity(
+    payload: ValidationActivityIn, current_user: User = Depends(get_current_user), db: Session = Depends(get_db),
+):
+    verify_project_access(payload.project_id, current_user, db)
     return ValidationService(db).create(**payload.model_dump())
 
 
@@ -55,5 +59,5 @@ def update_activity(activity_id: str, payload: ValidationActivityUpdateIn, db: S
 
 
 @router.post("/seed-standard-phases", response_model=list[ValidationActivityOut])
-def seed_standard_phases(project_id: str, db: Session = Depends(get_db)):
+def seed_standard_phases(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     return ValidationService(db).seed_standard_phases(project_id)

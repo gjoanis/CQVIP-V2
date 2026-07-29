@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_project_owner
 from app.models.project_node import ProjectNode
 from app.repositories.base import BaseRepository
 
@@ -28,10 +28,10 @@ class NodeOut(NodeIn):
 
 
 @router.get("/nodes", response_model=list[NodeOut])
-def list_nodes(project_id: str, db: Session = Depends(get_db)):
+def list_nodes(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     return [n for n in NodeRepository(db).list_all(limit=5000) if n.project_id == project_id]
 
 
 @router.post("/nodes", response_model=NodeOut)
-def create_node(project_id: str, payload: NodeIn, db: Session = Depends(get_db)):
+def create_node(payload: NodeIn, project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     return NodeRepository(db).create(ProjectNode(project_id=project_id, **payload.model_dump()))

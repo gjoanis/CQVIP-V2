@@ -19,6 +19,9 @@ class ProjectService:
     def list_for_client(self, client_id: str) -> list[Project]:
         return self.repo.list_for_client(client_id)
 
+    def list_for_owner(self, owner_id: str, client_id: str | None = None) -> list[Project]:
+        return self.repo.list_for_owner(owner_id, client_id)
+
     def create(self, *, actor_user_id: str | None = None, **fields) -> Project:
         project = self.repo.create(Project(**fields))
         log_action(self.db, user_id=actor_user_id, action="create", entity_type="Project", entity_id=project.id)

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.ai.executive_summary import ExecutiveSummary
-from app.api.deps import get_db
+from app.api.deps import get_db, require_project_owner
 from app.models.enums import RequirementPriority, RequirementStatus
 from app.workflows.project_readiness import (
     compute_action_queue,
@@ -57,7 +57,7 @@ class ActionQueueRowOut(BaseModel):
 
 
 @router.get("", response_model=ProjectDashboardOut)
-def get_project_dashboard(project_id: str, db: Session = Depends(get_db)):
+def get_project_dashboard(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     metrics = compute_project_dashboard(db, project_id)
     summary = ExecutiveSummary().run(
         lifecycle_readiness_pct=metrics["lifecycle_readiness_pct"],
@@ -73,12 +73,12 @@ def get_project_dashboard(project_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/gap-analysis", response_model=list[GapRowOut])
-def get_gap_analysis(project_id: str, db: Session = Depends(get_db)):
+def get_gap_analysis(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     metrics = compute_project_dashboard(db, project_id)
     return compute_gap_analysis(db, project_id, metrics["current_stage"])
 
 
 @router.get("/action-queue", response_model=list[ActionQueueRowOut])
-def get_action_queue(project_id: str, db: Session = Depends(get_db)):
+def get_action_queue(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     metrics = compute_project_dashboard(db, project_id)
     return compute_action_queue(db, project_id, metrics["current_stage"])

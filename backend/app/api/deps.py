@@ -24,3 +24,23 @@ def get_current_user(
     if user is None or not user.is_active:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found or inactive")
     return user
+
+
+def verify_project_access(project_id: str, user: User, db: Session) -> None:
+    """Raises 404 (not 403) if the project doesn't exist or isn't owned by
+    `user`, so a foreign project_id is indistinguishable from a nonexistent
+    one -- callers can't use this to probe which IDs exist in other accounts."""
+    from app.repositories.project_repository import ProjectRepository
+
+    project = ProjectRepository(db).get(project_id)
+    if project is None or project.owner_id != user.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found")
+
+
+def require_project_owner(
+    project_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db),
+) -> str:
+    """Dependency for routes where project_id is a path or query parameter --
+    binds by parameter name the same way a route handler's own params would."""
+    verify_project_access(project_id, current_user, db)
+    return project_id

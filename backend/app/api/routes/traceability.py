@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_project_owner
 from app.models.protocol import Protocol
 from app.models.requirement import Requirement
 from app.models.test_step import TestStep
@@ -26,7 +26,7 @@ class TraceabilityRowOut(BaseModel):
 
 
 @router.get("/matrix", response_model=list[TraceabilityRowOut])
-def get_matrix(project_id: str, db: Session = Depends(get_db)):
+def get_matrix(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     links = TraceabilityService(db).matrix_for_project(project_id)
 
     requirement_ids = {link.requirement_id for link in links}
@@ -64,5 +64,5 @@ def get_matrix(project_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/coverage")
-def get_coverage(project_id: str, db: Session = Depends(get_db)):
+def get_coverage(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     return TraceabilityService(db).coverage_summary(project_id)

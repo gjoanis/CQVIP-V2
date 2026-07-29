@@ -14,6 +14,7 @@ class Project(Base, IDMixin, TimestampMixin):
     __tablename__ = "projects"
 
     client_id: Mapped[str] = mapped_column(ForeignKey("clients.id"), index=True)
+    owner_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
     name: Mapped[str] = mapped_column(String(255))
     code: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     description: Mapped[str] = mapped_column(String(2000), default="")

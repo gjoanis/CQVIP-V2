@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_project_owner
 from app.config import get_settings
 from app.services.document_service import DocumentService
 
@@ -24,13 +24,13 @@ class DocumentOut(BaseModel):
 
 
 @router.get("", response_model=list[DocumentOut])
-def list_documents(project_id: str, db: Session = Depends(get_db)):
+def list_documents(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     return DocumentService(db).list_for_project(project_id)
 
 
 @router.post("", response_model=DocumentOut)
 async def upload_document(
-    project_id: str, doc_type: str, file: UploadFile,
+    doc_type: str, file: UploadFile, project_id: str = Depends(require_project_owner),
     system_id: str | None = None, db: Session = Depends(get_db),
 ):
     import os

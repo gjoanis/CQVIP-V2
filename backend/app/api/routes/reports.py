@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_project_owner
 from app.repositories.project_repository import ProjectRepository
 from app.services.report_service import ReportService
 from app.workflows.report_generation import generate_validation_summary_report
@@ -27,18 +27,21 @@ class ReportOut(BaseModel):
 
 
 @router.get("", response_model=list[ReportOut])
-def list_reports(project_id: str, db: Session = Depends(get_db)):
+def list_reports(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     return ReportService(db).list_for_project(project_id)
 
 
 @router.post("/generate", response_model=ReportOut)
-def generate_report(project_id: str, generated_by_id: str | None = None, db: Session = Depends(get_db)):
+def generate_report(
+    generated_by_id: str | None = None, project_id: str = Depends(require_project_owner),
+    db: Session = Depends(get_db),
+):
     project = ProjectRepository(db).get_or_404(project_id)
     return generate_validation_summary_report(db, project, generated_by_id=generated_by_id)
 
 
 @router.get("/{report_id}/download")
-def download_report(project_id: str, report_id: str, db: Session = Depends(get_db)):
+def download_report(report_id: str, project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     report = ReportService(db).get(report_id)
     if not os.path.exists(report.file_path):
         raise HTTPException(404, "Report file not found on disk")
