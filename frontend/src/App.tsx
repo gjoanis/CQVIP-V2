@@ -7,6 +7,7 @@ import { MainLayout } from "./layouts/MainLayout";
 import { Administration } from "./pages/Administration";
 import { Clients } from "./pages/Clients";
 import { Dashboard } from "./pages/Dashboard";
+import { DocumentView } from "./pages/DocumentView";
 import { Documents } from "./pages/Documents";
 import { KnowledgeLibrary } from "./pages/KnowledgeLibrary";
 import { Login } from "./pages/Login";
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="workspace" element={<ProjectWorkspace />} />
           <Route path="systems" element={<Systems />} />
           <Route path="documents" element={<Documents />} />
+          <Route path="documents/:id" element={<DocumentView />} />
           <Route path="requirements" element={<Requirements />} />
           <Route path="requirements/:id" element={<RequirementWorkspace />} />
           <Route path="risks" element={<RiskRegister />} />

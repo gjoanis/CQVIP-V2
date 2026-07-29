@@ -269,6 +269,21 @@ export interface SearchResult {
   distance: number | null;
 }
 
+export interface KnowledgeDocument {
+  document_id: string;
+  title: string;
+  source_url: string;
+  added_at: string;
+  uploaded_by_id: string;
+  chunk_count: number;
+  body?: string;
+  standard?: string;
+  category?: string;
+  client_id?: string;
+}
+
+export type KnowledgeTaxonomy = Record<string, string[]>;
+
 export interface Role {
   id: string;
   name: string;

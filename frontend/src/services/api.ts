@@ -7,6 +7,8 @@ import type {
   DocumentItem,
   GapAnalysisRow,
   GeneratedProtocol,
+  KnowledgeDocument,
+  KnowledgeTaxonomy,
   Notification,
   Project,
   ProjectDashboard,
@@ -141,6 +143,30 @@ export const knowledgeApi = {
     api.get<SearchResult[]>(
       `/knowledge/search?q=${encodeURIComponent(query)}&collection=${collection}&top_k=${topK}`,
     ),
+  taxonomy: () => api.get<KnowledgeTaxonomy>("/knowledge/taxonomy"),
+  listDocuments: (collection: string) =>
+    api.get<KnowledgeDocument[]>(`/knowledge/documents?collection=${encodeURIComponent(collection)}`),
+  uploadDocument: (params: {
+    collection: string;
+    title: string;
+    taxonomyValue: string;
+    file: File;
+    sourceUrl?: string;
+    clientId?: string;
+  }) => {
+    const form = new FormData();
+    form.append("file", params.file);
+    const query = new URLSearchParams({
+      collection: params.collection,
+      title: params.title,
+      taxonomy_value: params.taxonomyValue,
+    });
+    if (params.sourceUrl) query.set("source_url", params.sourceUrl);
+    if (params.clientId) query.set("client_id", params.clientId);
+    return api.upload<KnowledgeDocument>(`/knowledge/documents?${query.toString()}`, form);
+  },
+  deleteDocument: (documentId: string, collection: string) =>
+    api.del(`/knowledge/documents/${documentId}?collection=${encodeURIComponent(collection)}`),
 };
 
 export const administrationApi = {

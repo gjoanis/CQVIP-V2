@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 
 import { DataTable } from "../components/DataTable";
 import { useCurrentProject } from "../hooks/useCurrentProject";
@@ -132,7 +133,15 @@ export function Documents() {
           rowKey={(d) => d.id}
           emptyMessage="No documents uploaded yet."
           columns={[
-            { header: "Name", render: (d) => d.name, sortValue: (d) => d.name },
+            {
+              header: "Name",
+              render: (d) => (
+                <Link to={`/documents/${d.id}`} className="requirement-link">
+                  {d.name}
+                </Link>
+              ),
+              sortValue: (d) => d.name,
+            },
             { header: "Type", render: (d) => d.doc_type, sortValue: (d) => d.doc_type },
             {
               header: "System / Process",

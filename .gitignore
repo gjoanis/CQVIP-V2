@@ -18,6 +18,7 @@ backend/storage/evidence/*
 backend/storage/attachments/*
 backend/storage/archives/*
 backend/storage/chroma/*
+backend/storage/knowledge_uploads/*
 !backend/storage/**/.gitkeep
 
 # Frontend
