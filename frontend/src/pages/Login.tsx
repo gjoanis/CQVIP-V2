@@ -4,13 +4,17 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { ApiError } from "../services/apiClient";
 
+const IS_PRODUCTION = (import.meta.env.VITE_API_BASE_URL ?? "").includes("cqvip-api.onrender.com");
+const DEFAULT_EMAIL = IS_PRODUCTION ? "demo@cqvip.app" : "demo";
+const DEFAULT_PASSWORD = IS_PRODUCTION ? "CqvipDemo#2026" : "demo123";
+
 export function Login() {
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [email, setEmail] = useState("demo");
+  const [email, setEmail] = useState(DEFAULT_EMAIL);
   const [fullName, setFullName] = useState("");
-  const [password, setPassword] = useState("demo123");
+  const [password, setPassword] = useState(DEFAULT_PASSWORD);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
