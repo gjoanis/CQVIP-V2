@@ -15,44 +15,86 @@ function rpnClass(rpn: number): string {
   return "low";
 }
 
+const AI_FIELD_KEYS = [
+  "potential_failure_mode", "potential_effect", "severity",
+  "potential_cause", "occurrence", "current_controls", "detection", "recommended_action",
+] as const satisfies readonly (keyof FmeaLineItem)[];
+
+type AiFieldKey = (typeof AI_FIELD_KEYS)[number];
+
+function pickAiFields(source: FmeaLineItem): Pick<FmeaLineItem, AiFieldKey> {
+  const picked = {} as Pick<FmeaLineItem, AiFieldKey>;
+  for (const key of AI_FIELD_KEYS) picked[key] = source[key] as never;
+  return picked;
+}
+
 interface ItemCardProps {
   item: FmeaLineItem;
+  fmeaId: string;
   users: User[];
   onSave: (itemId: string, fields: Partial<FmeaLineItem>) => Promise<void>;
   onDelete: (itemId: string) => void;
-  onAiSuggest: (itemId: string) => Promise<void>;
 }
 
-function FmeaItemCard({ item, users, onSave, onDelete, onAiSuggest }: ItemCardProps) {
+function FmeaItemCard({ item, fmeaId, users, onSave, onDelete }: ItemCardProps) {
   const [draft, setDraft] = useState(item);
   const [suggesting, setSuggesting] = useState(false);
+  const [pendingSuggestion, setPendingSuggestion] = useState(false);
+  const [accepting, setAccepting] = useState(false);
 
-  useEffect(() => setDraft(item), [item]);
+  useEffect(() => {
+    if (!pendingSuggestion) setDraft(item);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item, pendingSuggestion]);
 
   function field<K extends keyof FmeaLineItem>(key: K, value: FmeaLineItem[K]) {
     setDraft((d) => ({ ...d, [key]: value }));
   }
 
+  function isAiField(key: keyof FmeaLineItem): key is AiFieldKey {
+    return (AI_FIELD_KEYS as readonly string[]).includes(key as string);
+  }
+
   function saveField<K extends keyof FmeaLineItem>(key: K) {
+    if (pendingSuggestion && isAiField(key)) return; // reviewing a suggestion -- don't persist yet
     if (draft[key] === item[key]) return;
     onSave(item.id, { [key]: draft[key] } as Partial<FmeaLineItem>);
   }
 
   async function saveNow<K extends keyof FmeaLineItem>(key: K, value: FmeaLineItem[K]) {
     setDraft((d) => ({ ...d, [key]: value }));
+    if (pendingSuggestion && isAiField(key)) return; // reviewing a suggestion -- don't persist yet
     await onSave(item.id, { [key]: value } as Partial<FmeaLineItem>);
   }
 
   async function handleAiSuggest() {
     setSuggesting(true);
     try {
-      await onAiSuggest(item.id);
+      const preview = await fmeaApi.aiSuggest(fmeaId, item.id);
+      setDraft((d) => ({ ...d, ...pickAiFields(preview) }));
+      setPendingSuggestion(true);
     } finally {
       setSuggesting(false);
     }
   }
 
+  async function handleAcceptSuggestion() {
+    setAccepting(true);
+    try {
+      await onSave(item.id, pickAiFields(draft));
+      setPendingSuggestion(false);
+    } finally {
+      setAccepting(false);
+    }
+  }
+
+  function handleDiscardSuggestion() {
+    setDraft((d) => ({ ...d, ...pickAiFields(item) }));
+    setPendingSuggestion(false);
+  }
+
   const hasResulting = item.resulting_rpn !== null;
+  const displayRpn = pendingSuggestion ? draft.severity * draft.occurrence * draft.detection : item.rpn;
 
   return (
     <div className="card assessment-entry">
@@ -65,8 +107,8 @@ function FmeaItemCard({ item, users, onSave, onDelete, onAiSuggest }: ItemCardPr
           aria-label="Process step"
         />
         <div className="requirement-group-meta">
-          <span className={`badge badge-${rpnClass(item.rpn)}`}>RPN {item.rpn}</span>
-          <button type="button" className="btn" disabled={suggesting} onClick={handleAiSuggest}>
+          <span className={`badge badge-${rpnClass(displayRpn)}`}>RPN {displayRpn}</span>
+          <button type="button" className="btn" disabled={suggesting || pendingSuggestion} onClick={handleAiSuggest}>
             {suggesting ? "Thinking..." : "AI Suggest"}
           </button>
           <button type="button" className="btn-link" onClick={() => onDelete(item.id)}>
@@ -74,6 +116,20 @@ function FmeaItemCard({ item, users, onSave, onDelete, onAiSuggest }: ItemCardPr
           </button>
         </div>
       </div>
+
+      {pendingSuggestion && (
+        <div className="ai-suggestion-banner">
+          <span>AI suggestion below is a draft — edit anything, then:</span>
+          <div className="ai-suggestion-actions">
+            <button type="button" className="btn" disabled={accepting} onClick={handleAcceptSuggestion}>
+              {accepting ? "Saving..." : "Accept Suggestion"}
+            </button>
+            <button type="button" className="btn-link" onClick={handleDiscardSuggestion}>
+              Discard
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="field-list">
         <div className="field-row">
@@ -316,17 +372,6 @@ export function FmeaWorksheet() {
     }
   }
 
-  async function handleAiSuggest(itemId: string) {
-    if (!id) return;
-    setError(null);
-    try {
-      const updated = await fmeaApi.aiSuggest(id, itemId);
-      setItems((prev) => prev.map((it) => (it.id === itemId ? updated : it)));
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "AI suggestion failed");
-    }
-  }
-
   async function handleStatusChange(status: FmeaStatus) {
     if (!id || !fmea) return;
     try {
@@ -410,10 +455,10 @@ export function FmeaWorksheet() {
               <FmeaItemCard
                 key={item.id}
                 item={item}
+                fmeaId={id!}
                 users={users}
                 onSave={handleSaveItem}
                 onDelete={handleDeleteItem}
-                onAiSuggest={handleAiSuggest}
               />
             ))}
         </div>

@@ -133,10 +133,15 @@ def delete_item(item_id: str, fmea_id: str = Depends(require_fmea_owner), db: Se
 def ai_suggest_item(item_id: str, fmea_id: str = Depends(require_fmea_owner), db: Session = Depends(get_db)):
     """Runs the AI-suggested failure mode analysis (failure mode, effect, cause,
     controls, S/O/D ratings, recommended action) for one process step and
-    persists the result -- mirrors the Requirement AI Assessment feature."""
+    returns it as a PREVIEW -- nothing is persisted here. The frontend shows it
+    for review/edit; the user's own Accept action calls PUT to actually save it."""
     service = FmeaService(db)
     item = service.get_item_in_fmea(fmea_id, item_id)
     fmea = service.get(fmea_id)
     system = SystemRepository(db).get(fmea.system_id)
     result = FmeaSuggestion().run(process_step=item.process_step, system_name=system.name if system else "")
-    return service.update_item(fmea_id, item_id, **result)
+    preview = FmeaLineItemOut.model_validate(item)
+    for key, value in result.items():
+        setattr(preview, key, value)
+    preview.rpn = preview.severity * preview.occurrence * preview.detection
+    return preview

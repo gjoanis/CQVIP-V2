@@ -854,6 +854,37 @@ a:focus-visible {
   box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 
+.candidate-select-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-suggestion-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 11px 14px;
+  margin-bottom: 14px;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--color-primary-hover);
+}
+
+.ai-suggestion-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
 .fmea-sod-row {
   display: flex;
   flex-wrap: wrap;
@@ -1242,5 +1273,9 @@ a:focus-visible {
 
   .fmea-sod-row {
     gap: 12px;
+  }
+
+  .candidate-select-row {
+    flex-wrap: wrap;
   }
 }

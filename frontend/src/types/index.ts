@@ -284,6 +284,13 @@ export interface KnowledgeDocument {
 
 export type KnowledgeTaxonomy = Record<string, string[]>;
 
+export interface ExtractedRequirement {
+  req_code: string;
+  title: string;
+  description: string;
+  category: string;
+}
+
 export type FmeaStatus = "draft" | "in_review" | "approved";
 
 export interface FmeaAnalysis {

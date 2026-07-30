@@ -4,7 +4,9 @@ import { Link, useParams } from "react-router-dom";
 import { useCurrentProject } from "../hooks/useCurrentProject";
 import { documentsApi, requirementsApi, systemsApi } from "../services/api";
 import { ApiError } from "../services/apiClient";
-import type { DocumentItem, Requirement, SystemItem } from "../types";
+import type { DocumentItem, ExtractedRequirement, Requirement, SystemItem } from "../types";
+
+const EXTRACTABLE_DOC_TYPES = new Set(["URS", "FS", "DS", "HDS", "SDS"]);
 
 export function DocumentView() {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +17,12 @@ export function DocumentView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [extracting, setExtracting] = useState(false);
+  const [candidates, setCandidates] = useState<ExtractedRequirement[] | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [accepting, setAccepting] = useState(false);
+
+  function load() {
     if (!currentProject || !id) return;
     setLoading(true);
     setError(null);
@@ -35,7 +42,71 @@ export function DocumentView() {
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Failed to load document"))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentProject, id]);
+
+  async function handleExtract() {
+    if (!id) return;
+    setExtracting(true);
+    setError(null);
+    try {
+      const found = await documentsApi.extractRequirements(id);
+      setCandidates(found);
+      setSelected(new Set(found.map((_, i) => i)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Extraction failed");
+    } finally {
+      setExtracting(false);
+    }
+  }
+
+  function updateCandidate(index: number, fields: Partial<ExtractedRequirement>) {
+    setCandidates((prev) => (prev ? prev.map((c, i) => (i === index ? { ...c, ...fields } : c)) : prev));
+  }
+
+  function toggleSelected(index: number) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }
+
+  async function handleAccept() {
+    if (!candidates || !currentProject || !document) return;
+    const toCreate = candidates.filter((_, i) => selected.has(i));
+    if (toCreate.length === 0) return;
+    setAccepting(true);
+    setError(null);
+    try {
+      await Promise.all(
+        toCreate.map((c) =>
+          requirementsApi.create({
+            project_id: currentProject.id,
+            document_id: document.id,
+            system_id: document.system_id,
+            req_code: c.req_code,
+            title: c.title,
+            description: c.description,
+            category: c.category,
+            source: document.name,
+          }),
+        ),
+      );
+      setCandidates(null);
+      setSelected(new Set());
+      load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to save accepted requirements");
+    } finally {
+      setAccepting(false);
+    }
+  }
 
   function systemName(sid: string | null): string {
     if (!sid) return "—";
@@ -43,7 +114,7 @@ export function DocumentView() {
   }
 
   if (loading) return <div className="page-loading">Loading...</div>;
-  if (error) return <div className="page-error">{error}</div>;
+  if (error && !document) return <div className="page-error">{error}</div>;
   if (!document) return <div className="page-error">Document not found.</div>;
 
   const assessedCount = requirements.filter((r) => r.risk).length;
@@ -60,6 +131,91 @@ export function DocumentView() {
       <p className="page-subtitle">
         {document.doc_type} · v{document.version} · {systemName(document.system_id)}
       </p>
+      {error && <div className="page-error">{error}</div>}
+
+      {EXTRACTABLE_DOC_TYPES.has(document.doc_type.toUpperCase()) && (
+        <div className="card" style={{ marginBottom: 24 }}>
+          <h2>Extract Requirements</h2>
+          <p className="page-subtitle" style={{ marginTop: -4, marginBottom: 16 }}>
+            Have AI read this document and propose candidate requirements. Nothing is saved until you review and
+            accept them below.
+          </p>
+          <button className="btn" onClick={handleExtract} disabled={extracting}>
+            {extracting ? "Reading document..." : "Extract Requirements"}
+          </button>
+
+          {candidates && (
+            <div style={{ marginTop: 20 }}>
+              {candidates.length === 0 ? (
+                <p className="empty-state">No candidate requirements found in this document.</p>
+              ) : (
+                <>
+                  <div className="toolbar">
+                    <button
+                      type="button"
+                      className="btn"
+                      disabled={accepting || selected.size === 0}
+                      onClick={handleAccept}
+                    >
+                      {accepting ? "Saving..." : `Accept Selected (${selected.size})`}
+                    </button>
+                    <button type="button" className="btn-link" onClick={() => setCandidates(null)}>
+                      Discard All
+                    </button>
+                  </div>
+                  <div className="assessment-doc">
+                    {candidates.map((c, i) => (
+                      <div className="card assessment-entry" key={i}>
+                        <div className="assessment-entry-header">
+                          <label className="candidate-select-row">
+                            <input
+                              type="checkbox"
+                              checked={selected.has(i)}
+                              onChange={() => toggleSelected(i)}
+                              aria-label={`Include ${c.req_code}`}
+                            />
+                            <input
+                              className="fmea-step-input"
+                              value={c.req_code}
+                              onChange={(e) => updateCandidate(i, { req_code: e.target.value })}
+                              aria-label="Requirement code"
+                              style={{ maxWidth: 140, fontWeight: 700 }}
+                            />
+                            <input
+                              className="fmea-step-input"
+                              value={c.title}
+                              onChange={(e) => updateCandidate(i, { title: e.target.value })}
+                              aria-label="Title"
+                            />
+                          </label>
+                        </div>
+                        <div className="field-list">
+                          <div className="field-row">
+                            <span className="field-label">Description</span>
+                            <textarea
+                              className="field-value-left fmea-textarea"
+                              value={c.description}
+                              onChange={(e) => updateCandidate(i, { description: e.target.value })}
+                            />
+                          </div>
+                          <div className="field-row">
+                            <span className="field-label">Category</span>
+                            <input
+                              className="field-value"
+                              value={c.category}
+                              onChange={(e) => updateCandidate(i, { category: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="stat-grid">
         <div className="stat-card">

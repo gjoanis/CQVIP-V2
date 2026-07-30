@@ -58,3 +58,17 @@ def require_fmea_owner(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "FMEA not found")
     verify_project_access(fmea.project_id, current_user, db)
     return fmea_id
+
+
+def require_document_owner(
+    document_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db),
+) -> str:
+    """Same idea as require_project_owner, but for routes nested under
+    /documents/{document_id}/... -- resolves the document's project and checks that."""
+    from app.repositories.document_repository import DocumentRepository
+
+    document = DocumentRepository(db).get(document_id)
+    if document is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+    verify_project_access(document.project_id, current_user, db)
+    return document_id

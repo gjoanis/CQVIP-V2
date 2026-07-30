@@ -5,6 +5,7 @@ import type {
   CoverageSummary,
   DashboardMetrics,
   DocumentItem,
+  ExtractedRequirement,
   FmeaAnalysis,
   FmeaLineItem,
   GapAnalysisRow,
@@ -77,6 +78,8 @@ export const documentsApi = {
       form,
     );
   },
+  extractRequirements: (documentId: string) =>
+    api.post<ExtractedRequirement[]>(`/documents/${documentId}/extract-requirements`),
 };
 
 export const requirementsApi = {
