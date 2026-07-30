@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.ai.requirement_assessment import RequirementAssessment
-from app.api.deps import get_current_user, get_db, require_project_owner, verify_project_access
+from app.api.deps import get_current_user, get_db, require_project_owner, require_requirement_owner, verify_project_access
 from app.config import get_settings
 from app.models.attachment import Attachment
 from app.models.enums import RequirementDisposition, RequirementPriority, RequirementStatus
@@ -94,9 +94,8 @@ def update_requirement(requirement_id: str, payload: RequirementIn, db: Session 
 
 
 @router.delete("/{requirement_id}")
-def delete_requirement(requirement_id: str, db: Session = Depends(get_db)):
-    repo = RequirementRepository(db)
-    repo.delete(repo.get_or_404(requirement_id))
+def delete_requirement(requirement_id: str = Depends(require_requirement_owner), db: Session = Depends(get_db)):
+    RequirementService(db).delete(requirement_id)
     return {"deleted": requirement_id}
 
 

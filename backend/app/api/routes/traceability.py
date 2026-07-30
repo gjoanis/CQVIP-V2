@@ -7,6 +7,7 @@ from app.api.deps import get_db, require_project_owner
 from app.models.protocol import Protocol
 from app.models.requirement import Requirement
 from app.models.test_step import TestStep
+from app.models.validation_activity import ValidationActivity
 from app.services.traceability_service import TraceabilityService
 
 router = APIRouter(prefix="/projects/{project_id}/traceability", tags=["traceability"])
@@ -20,6 +21,7 @@ class TraceabilityRowOut(BaseModel):
     protocol_id: str | None
     protocol_number: str | None
     protocol_title: str | None
+    activity_type: str | None
     test_step_id: str | None
     test_step_description: str | None
     coverage_status: str
@@ -43,11 +45,17 @@ def get_matrix(project_id: str = Depends(require_project_owner), db: Session = D
         t.id: t for t in db.execute(select(TestStep).where(TestStep.id.in_(test_step_ids))).scalars()
     } if test_step_ids else {}
 
+    activity_ids = {p.validation_activity_id for p in protocols.values() if p.validation_activity_id}
+    activities = {
+        a.id: a for a in db.execute(select(ValidationActivity).where(ValidationActivity.id.in_(activity_ids))).scalars()
+    } if activity_ids else {}
+
     rows = []
     for link in links:
         requirement = requirements.get(link.requirement_id)
         protocol = protocols.get(link.protocol_id) if link.protocol_id else None
         test_step = test_steps.get(link.test_step_id) if link.test_step_id else None
+        activity = activities.get(protocol.validation_activity_id) if protocol else None
         rows.append(TraceabilityRowOut(
             id=link.id,
             requirement_id=link.requirement_id,
@@ -56,6 +64,7 @@ def get_matrix(project_id: str = Depends(require_project_owner), db: Session = D
             protocol_id=link.protocol_id,
             protocol_number=protocol.protocol_number if protocol else None,
             protocol_title=protocol.title if protocol else None,
+            activity_type=activity.activity_type.value if activity else None,
             test_step_id=link.test_step_id,
             test_step_description=test_step.description if test_step else None,
             coverage_status=link.coverage_status,

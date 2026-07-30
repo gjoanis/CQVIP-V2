@@ -441,36 +441,11 @@ h3 {
   user-select: none;
 }
 
-/* Traceability matrix -- a real requirement x protocol grid, not a flat list */
-.trace-matrix th:not(.trace-matrix-corner) {
-  text-align: center;
-  white-space: nowrap;
-}
-
-.trace-matrix-corner {
-  position: sticky;
-  left: 0;
-  z-index: 1;
-  background: var(--color-surface);
-  min-width: 220px;
-  box-shadow: 1px 0 0 var(--color-border);
-}
-
-.data-table th.trace-matrix-corner {
-  background: #fafbfc;
-  z-index: 2;
-}
-
-.trace-req-title {
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  font-weight: 400;
-  margin-top: 2px;
-}
-
-.trace-cell {
-  text-align: center;
-  font-size: 1rem;
+/* Traceability matrix -- one row per requirement, full requirement text */
+.trace-req-text {
+  display: inline-block;
+  max-width: 480px;
+  line-height: 1.5;
 }
 
 .data-table th.sortable:hover {

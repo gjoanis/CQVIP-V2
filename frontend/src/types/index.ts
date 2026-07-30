@@ -167,6 +167,7 @@ export interface TraceabilityLink {
   protocol_id: string | null;
   protocol_number: string | null;
   protocol_title: string | null;
+  activity_type: ValidationActivityType | null;
   test_step_id: string | null;
   test_step_description: string | null;
   coverage_status: string;

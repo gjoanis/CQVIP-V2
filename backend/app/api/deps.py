@@ -72,3 +72,17 @@ def require_document_owner(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
     verify_project_access(document.project_id, current_user, db)
     return document_id
+
+
+def require_requirement_owner(
+    requirement_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db),
+) -> str:
+    """Same idea as require_project_owner, but for routes nested under
+    /requirements/{requirement_id}/... -- resolves the requirement's project and checks that."""
+    from app.repositories.requirement_repository import RequirementRepository
+
+    requirement = RequirementRepository(db).get(requirement_id)
+    if requirement is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Requirement not found")
+    verify_project_access(requirement.project_id, current_user, db)
+    return requirement_id
