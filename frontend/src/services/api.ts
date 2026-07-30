@@ -53,6 +53,7 @@ export const projectsApi = {
   get: (id: string) => api.get<Project>(`/projects/${id}`),
   create: (data: Partial<Project>) => api.post<Project>("/projects", data),
   update: (id: string, data: Partial<Project>) => api.put<Project>(`/projects/${id}`, data),
+  reset: (id: string) => api.post<{ project_id: string; deleted: Record<string, number> }>(`/projects/${id}/reset`),
 };
 
 export const projectWorkspaceApi = {
@@ -80,6 +81,7 @@ export const documentsApi = {
   },
   extractRequirements: (documentId: string) =>
     api.post<ExtractedRequirement[]>(`/documents/${documentId}/extract-requirements`),
+  delete: (documentId: string) => api.del(`/documents/${documentId}`),
 };
 
 export const requirementsApi = {

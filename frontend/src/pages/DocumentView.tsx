@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { useCurrentProject } from "../hooks/useCurrentProject";
 import { documentsApi, requirementsApi, systemsApi } from "../services/api";
@@ -10,6 +10,7 @@ const EXTRACTABLE_DOC_TYPES = new Set(["URS", "FS", "DS", "HDS", "SDS"]);
 
 export function DocumentView() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { currentProject } = useCurrentProject();
   const [document, setDocument] = useState<DocumentItem | null>(null);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
@@ -21,6 +22,9 @@ export function DocumentView() {
   const [candidates, setCandidates] = useState<ExtractedRequirement[] | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [accepting, setAccepting] = useState(false);
+
+  const [deleteConfirming, setDeleteConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   function load() {
     if (!currentProject || !id) return;
@@ -108,6 +112,19 @@ export function DocumentView() {
     }
   }
 
+  async function handleDelete() {
+    if (!id) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await documentsApi.delete(id);
+      navigate("/documents");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete document");
+      setDeleting(false);
+    }
+  }
+
   function systemName(sid: string | null): string {
     if (!sid) return "—";
     return systems.find((s) => s.id === sid)?.name ?? sid;
@@ -127,6 +144,24 @@ export function DocumentView() {
       </Link>
       <div className="page-header">
         <h1>{document.name}</h1>
+        {deleteConfirming ? (
+          <div className="reset-confirm-row">
+            <span className="page-subtitle" style={{ margin: 0 }}>
+              Delete this document and its {requirements.length} extracted requirement
+              {requirements.length === 1 ? "" : "s"}?
+            </span>
+            <button className="btn-danger" disabled={deleting} onClick={handleDelete}>
+              {deleting ? "Deleting..." : "Confirm Delete"}
+            </button>
+            <button className="btn-link" onClick={() => setDeleteConfirming(false)}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button className="btn-danger" onClick={() => setDeleteConfirming(true)}>
+            Delete Document
+          </button>
+        )}
       </div>
       <p className="page-subtitle">
         {document.doc_type} · v{document.version} · {systemName(document.system_id)}

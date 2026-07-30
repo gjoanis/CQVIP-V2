@@ -1,6 +1,9 @@
+import os
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.models.attachment import Attachment
 from app.models.requirement import Requirement
 from app.models.requirement_relationship import RequirementRelationship
 from app.models.risk import Risk
@@ -25,6 +28,23 @@ class RequirementService:
     def update(self, requirement_id: str, **fields) -> Requirement:
         return self.repo.update(self.get(requirement_id), **fields)
 
+    def delete_for_document(self, document_id: str) -> int:
+        """Deletes every requirement extracted from a document, so re-uploading
+        and re-extracting that document starts from a truly clean slate."""
+        ids = list(
+            self.db.execute(select(Requirement.id).where(Requirement.document_id == document_id)).scalars()
+        )
+        for requirement_id in ids:
+            self.delete(requirement_id)
+        return len(ids)
+
+    def delete_for_project(self, project_id: str) -> int:
+        """Deletes every requirement in a project, used by project reset."""
+        ids = list(self.db.execute(select(Requirement.id).where(Requirement.project_id == project_id)).scalars())
+        for requirement_id in ids:
+            self.delete(requirement_id)
+        return len(ids)
+
     def delete(self, requirement_id: str) -> None:
         """Deleting a requirement with live traceability links, requirement
         relationships, or linked risks would violate their foreign keys on
@@ -46,5 +66,11 @@ class RequirementService:
             self.db.delete(rel)
         for risk in self.db.execute(select(Risk).where(Risk.requirement_id == requirement_id)).scalars():
             risk.requirement_id = None
+        for attachment in self.db.execute(
+            select(Attachment).where(Attachment.entity_type == "Requirement", Attachment.entity_id == requirement_id)
+        ).scalars():
+            if attachment.file_path and os.path.exists(attachment.file_path):
+                os.remove(attachment.file_path)
+            self.db.delete(attachment)
         self.db.commit()
         self.repo.delete(requirement)

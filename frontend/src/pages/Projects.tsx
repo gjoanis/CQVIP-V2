@@ -21,6 +21,10 @@ export function Projects() {
   const [targetEndDate, setTargetEndDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const [resetConfirmId, setResetConfirmId] = useState<string | null>(null);
+  const [resetConfirmText, setResetConfirmText] = useState("");
+  const [resetting, setResetting] = useState(false);
+
   function load() {
     setLoading(true);
     Promise.all([projectsApi.list(), clientsApi.list()])
@@ -89,11 +93,31 @@ export function Projects() {
     return clients.find((c) => c.id === id)?.name ?? id;
   }
 
+  async function handleReset(project: Project) {
+    setResetting(true);
+    setError(null);
+    try {
+      await projectsApi.reset(project.id);
+      setResetConfirmId(null);
+      setResetConfirmText("");
+      load();
+      refreshProjects();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to reset project");
+    } finally {
+      setResetting(false);
+    }
+  }
+
   return (
     <div>
       <div className="page-header">
         <h1>Projects</h1>
       </div>
+      <p className="page-subtitle">
+        "Reset Project" permanently deletes every requirement, document, system, FMEA, protocol, and validation
+        activity inside a project -- the project itself (name, client, dates) is kept so you can start it over.
+      </p>
       {error && <div className="page-error">{error}</div>}
 
       {clients.length === 0 && !loading ? (
@@ -182,6 +206,46 @@ export function Projects() {
                 />
               ),
               sortValue: (p) => p.target_end_date ?? "",
+            },
+            {
+              header: "Danger Zone",
+              render: (p) =>
+                resetConfirmId === p.id ? (
+                  <div className="reset-confirm-row">
+                    <input
+                      placeholder={`Type "${p.code}" to confirm`}
+                      value={resetConfirmText}
+                      onChange={(e) => setResetConfirmText(e.target.value)}
+                      autoFocus
+                    />
+                    <button
+                      className="btn-danger"
+                      disabled={resetConfirmText !== p.code || resetting}
+                      onClick={() => handleReset(p)}
+                    >
+                      {resetting ? "Resetting..." : "Confirm Reset"}
+                    </button>
+                    <button
+                      className="btn-link"
+                      onClick={() => {
+                        setResetConfirmId(null);
+                        setResetConfirmText("");
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="btn-danger"
+                    onClick={() => {
+                      setResetConfirmId(p.id);
+                      setResetConfirmText("");
+                    }}
+                  >
+                    Reset Project
+                  </button>
+                ),
             },
           ]}
         />
