@@ -31,6 +31,7 @@ export function KnowledgeLibrary() {
   const [uploadClientId, setUploadClientId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ sent: number; total: number } | null>(null);
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[] | null>(null);
@@ -66,6 +67,7 @@ export function KnowledgeLibrary() {
       return;
     }
     setUploading(true);
+    setUploadProgress(file.size > 800_000 ? { sent: 0, total: file.size } : null);
     setError(null);
     try {
       await knowledgeApi.uploadDocument({
@@ -75,6 +77,7 @@ export function KnowledgeLibrary() {
         file,
         sourceUrl: uploadSourceUrl || undefined,
         clientId: collection === "client_knowledge" ? uploadClientId : undefined,
+        onProgress: (sent, total) => setUploadProgress({ sent, total }),
       });
       setUploadTitle("");
       setUploadSourceUrl("");
@@ -84,6 +87,7 @@ export function KnowledgeLibrary() {
       setError(err instanceof ApiError ? err.message : "Upload failed");
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   }
 
@@ -195,7 +199,11 @@ export function KnowledgeLibrary() {
             <input id="kb-file" type="file" ref={fileInputRef} required />
           </div>
           <button className="btn" type="submit" disabled={uploading}>
-            {uploading ? "Uploading..." : "Add to Knowledge Library"}
+            {uploading
+              ? uploadProgress
+                ? `Uploading... ${Math.round((uploadProgress.sent / uploadProgress.total) * 100)}%`
+                : "Uploading..."
+              : "Add to Knowledge Library"}
           </button>
         </form>
       </div>

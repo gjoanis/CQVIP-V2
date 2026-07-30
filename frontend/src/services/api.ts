@@ -145,6 +145,74 @@ export const reportsApi = {
     ),
 };
 
+// Above this size, a single upload request is fragile: it stays open for
+// several seconds, and any transient network blip during that window kills
+// the whole request. Splitting into small chunks means a dropped connection
+// only costs one chunk (retried automatically), not the entire file.
+const CHUNK_UPLOAD_THRESHOLD = 800_000;
+const CHUNK_SIZE = 700_000;
+const CHUNK_MAX_ATTEMPTS = 3;
+
+async function uploadChunkWithRetry(uploadId: string, chunkIndex: number, blob: Blob): Promise<void> {
+  const form = new FormData();
+  form.append("chunk", blob);
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= CHUNK_MAX_ATTEMPTS; attempt++) {
+    try {
+      await api.upload(`/knowledge/documents/upload-chunk?upload_id=${uploadId}&chunk_index=${chunkIndex}`, form);
+      return;
+    } catch (err) {
+      lastError = err;
+      if (attempt < CHUNK_MAX_ATTEMPTS) await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+    }
+  }
+  throw lastError;
+}
+
+async function uploadKnowledgeDocument(params: {
+  collection: string;
+  title: string;
+  taxonomyValue: string;
+  file: File;
+  sourceUrl?: string;
+  clientId?: string;
+  onProgress?: (sentBytes: number, totalBytes: number) => void;
+}): Promise<KnowledgeDocument> {
+  const { collection, title, taxonomyValue, file, sourceUrl, clientId, onProgress } = params;
+
+  if (file.size <= CHUNK_UPLOAD_THRESHOLD) {
+    const form = new FormData();
+    form.append("file", file);
+    const query = new URLSearchParams({ collection, title, taxonomy_value: taxonomyValue });
+    if (sourceUrl) query.set("source_url", sourceUrl);
+    if (clientId) query.set("client_id", clientId);
+    const result = await api.upload<KnowledgeDocument>(`/knowledge/documents?${query.toString()}`, form);
+    onProgress?.(file.size, file.size);
+    return result;
+  }
+
+  const uploadId = crypto.randomUUID();
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    await uploadChunkWithRetry(uploadId, i, file.slice(start, end));
+    onProgress?.(end, file.size);
+  }
+
+  const query = new URLSearchParams({
+    upload_id: uploadId,
+    filename: file.name,
+    total_chunks: String(totalChunks),
+    collection,
+    title,
+    taxonomy_value: taxonomyValue,
+  });
+  if (sourceUrl) query.set("source_url", sourceUrl);
+  if (clientId) query.set("client_id", clientId);
+  return api.post<KnowledgeDocument>(`/knowledge/documents/complete-chunked-upload?${query.toString()}`);
+}
+
 export const knowledgeApi = {
   search: (query: string, collection = "knowledge_base", topK = 10) =>
     api.get<SearchResult[]>(
@@ -160,18 +228,8 @@ export const knowledgeApi = {
     file: File;
     sourceUrl?: string;
     clientId?: string;
-  }) => {
-    const form = new FormData();
-    form.append("file", params.file);
-    const query = new URLSearchParams({
-      collection: params.collection,
-      title: params.title,
-      taxonomy_value: params.taxonomyValue,
-    });
-    if (params.sourceUrl) query.set("source_url", params.sourceUrl);
-    if (params.clientId) query.set("client_id", params.clientId);
-    return api.upload<KnowledgeDocument>(`/knowledge/documents?${query.toString()}`, form);
-  },
+    onProgress?: (sentBytes: number, totalBytes: number) => void;
+  }) => uploadKnowledgeDocument(params),
   deleteDocument: (documentId: string, collection: string) =>
     api.del(`/knowledge/documents/${documentId}?collection=${encodeURIComponent(collection)}`),
 };
