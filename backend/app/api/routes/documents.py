@@ -54,6 +54,13 @@ async def upload_document(
     )
 
 
+@router.delete("/{document_id}")
+def delete_document(document_id: str = Depends(require_document_owner), db: Session = Depends(get_db)):
+    service = DocumentService(db)
+    service.repo.delete(service.get(document_id))
+    return {"deleted": document_id}
+
+
 @router.post("/{document_id}/extract-requirements", response_model=list[ExtractedRequirementOut])
 def extract_requirements(document_id: str = Depends(require_document_owner), db: Session = Depends(get_db)):
     """Parses the document and returns AI-extracted candidate requirements for

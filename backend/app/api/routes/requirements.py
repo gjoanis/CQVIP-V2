@@ -93,6 +93,13 @@ def update_requirement(requirement_id: str, payload: RequirementIn, db: Session 
     return RequirementService(db).update(requirement_id, **payload.model_dump())
 
 
+@router.delete("/{requirement_id}")
+def delete_requirement(requirement_id: str, db: Session = Depends(get_db)):
+    repo = RequirementRepository(db)
+    repo.delete(repo.get_or_404(requirement_id))
+    return {"deleted": requirement_id}
+
+
 class StatusIn(BaseModel):
     status: RequirementStatus
 

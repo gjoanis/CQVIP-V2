@@ -58,6 +58,12 @@ def update_activity(activity_id: str, payload: ValidationActivityUpdateIn, db: S
     return ValidationService(db).update(activity_id, **fields)
 
 
+@router.delete("/{activity_id}")
+def delete_activity(activity_id: str, db: Session = Depends(get_db)):
+    ValidationService(db).delete(activity_id)
+    return {"deleted": activity_id}
+
+
 @router.post("/seed-standard-phases", response_model=list[ValidationActivityOut])
 def seed_standard_phases(project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
     return ValidationService(db).seed_standard_phases(project_id)

@@ -44,3 +44,9 @@ def get_system(system_id: str, db: Session = Depends(get_db)):
 @router.put("/{system_id}", response_model=SystemOut)
 def update_system(system_id: str, payload: SystemIn, db: Session = Depends(get_db)):
     return SystemService(db).update(system_id, **payload.model_dump())
+
+
+@router.delete("/{system_id}")
+def delete_system(system_id: str, db: Session = Depends(get_db)):
+    SystemService(db).delete(system_id)
+    return {"deleted": system_id}

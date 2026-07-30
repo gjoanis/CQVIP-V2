@@ -19,3 +19,6 @@ class SystemService:
 
     def update(self, system_id: str, **fields) -> System:
         return self.repo.update(self.get(system_id), **fields)
+
+    def delete(self, system_id: str) -> None:
+        self.repo.delete(self.get(system_id))

@@ -74,6 +74,9 @@ class ValidationService:
     def record_result(self, activity_id: str, status: str, actual_date) -> ValidationActivity:
         return self.repo.update(self.repo.get_or_404(activity_id), status=status, actual_date=actual_date)
 
+    def delete(self, activity_id: str) -> None:
+        self.repo.delete(self.repo.get_or_404(activity_id))
+
     def seed_standard_phases(self, project_id: str) -> list[ValidationActivity]:
         """Creates any of the 8 standard C&Q phases not already tracked for
         this project, so the timeline has every phase to plot from the start."""
