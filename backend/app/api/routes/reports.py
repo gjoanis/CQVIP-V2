@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, require_project_owner
 from app.repositories.project_repository import ProjectRepository
 from app.services.report_service import ReportService
-from app.workflows.report_generation import generate_validation_summary_report
+from app.workflows.report_generation import generate_project_summary_report
 
 router = APIRouter(prefix="/projects/{project_id}/reports", tags=["reports"])
 
@@ -37,7 +37,7 @@ def generate_report(
     db: Session = Depends(get_db),
 ):
     project = ProjectRepository(db).get_or_404(project_id)
-    return generate_validation_summary_report(db, project, generated_by_id=generated_by_id)
+    return generate_project_summary_report(db, project, generated_by_id=generated_by_id)
 
 
 @router.get("/{report_id}/download")

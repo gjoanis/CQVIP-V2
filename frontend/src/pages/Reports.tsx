@@ -6,6 +6,15 @@ import { reportsApi } from "../services/api";
 import { ApiError } from "../services/apiClient";
 import type { Report } from "../types";
 
+const REPORT_TYPE_LABELS: Record<string, string> = {
+  project_summary: "Current Project Summary",
+  validation_summary: "Current Project Summary", // legacy value from before the rename
+};
+
+function reportTypeLabel(reportType: string): string {
+  return REPORT_TYPE_LABELS[reportType] ?? reportType;
+}
+
 export function Reports() {
   const { currentProject } = useCurrentProject();
   const [reports, setReports] = useState<Report[]>([]);
@@ -113,7 +122,7 @@ export function Reports() {
       <div className="page-header">
         <h1>Reports — {currentProject.name}</h1>
         <button className="btn" disabled={generating} onClick={handleGenerate}>
-          {generating ? "Generating..." : "Generate Validation Summary Report"}
+          {generating ? "Generating..." : "Generate Current Project Summary Report"}
         </button>
       </div>
       {error && <div className="page-error">{error}</div>}
@@ -124,10 +133,10 @@ export function Reports() {
         <DataTable
           rows={reports}
           rowKey={(r) => r.id}
-          emptyMessage="No reports generated yet. Click Generate Validation Summary Report above."
+          emptyMessage="No reports generated yet. Click Generate Current Project Summary Report above."
           columns={[
             { header: "Title", render: (r) => r.title, sortValue: (r) => r.title },
-            { header: "Type", render: (r) => r.report_type, sortValue: (r) => r.report_type },
+            { header: "Type", render: (r) => reportTypeLabel(r.report_type), sortValue: (r) => r.report_type },
             {
               header: "Generated",
               render: (r) => new Date(r.generated_at).toLocaleString(),

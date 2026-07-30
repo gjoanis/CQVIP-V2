@@ -2,7 +2,7 @@ from app.ai.base import AICapability
 from app.integrations.cloud_ai.anthropic_client import complete
 
 SYSTEM_PROMPT = (
-    "You write the narrative section of a pharma/GxP Validation Summary Report for a "
+    "You write the narrative section of a project status report for a "
     "quality leadership and inspection audience. Write three short sections using "
     "markdown '## ' headers -- Executive Summary, Risk & Gap Assessment, Recommendations "
     "-- each 1-3 sentences of plain prose, direct and factual, referencing the specific "
@@ -10,9 +10,9 @@ SYSTEM_PROMPT = (
 )
 
 
-class ValidationReportGeneration(AICapability):
-    """Drafts the narrative portion of a project's Validation Summary Report from its
-    live readiness metrics and gap analysis."""
+class ProjectSummaryGeneration(AICapability):
+    """Drafts the narrative portion of a project's Current Project Summary Report from
+    its live readiness metrics and gap analysis."""
 
     def run(
         self, *, project_name: str, lifecycle_readiness_pct: float,

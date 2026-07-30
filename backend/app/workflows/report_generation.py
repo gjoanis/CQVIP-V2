@@ -1,7 +1,10 @@
-"""Generates the pharma/GxP Validation Summary Report: a Markdown document
-combining a real Claude-written narrative with the live readiness metrics and
-gap analysis already computed for the project dashboard (app.workflows.project_readiness),
-saved to storage/generated_reports/ and recorded as a Report row.
+"""Generates the Current Project Summary Report: a Markdown document combining
+a real Claude-written narrative with the live readiness metrics and gap
+analysis already computed for the project dashboard
+(app.workflows.project_readiness), saved to storage/generated_reports/ and
+recorded as a Report row. Deliberately not called a "Validation Summary
+Report" -- that term is reserved for a report summarizing executed
+validation activities (IQ/OQ/PQ results), which this isn't.
 """
 import os
 from collections import Counter
@@ -9,14 +12,14 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from app.ai.validation_report_generation import ValidationReportGeneration
+from app.ai.project_summary_generation import ProjectSummaryGeneration
 from app.config import get_settings
 from app.models.project import Project
 from app.models.report import Report
 from app.services.report_service import ReportService
 from app.workflows.project_readiness import compute_gap_analysis, compute_project_dashboard
 
-REPORT_TYPE_VALIDATION_SUMMARY = "validation_summary"
+REPORT_TYPE_PROJECT_SUMMARY = "project_summary"
 
 
 def _top_gap_categories(open_gap_rows: list[dict], limit: int = 5) -> list[str]:
@@ -40,14 +43,14 @@ def _gap_table(open_gap_rows: list[dict], limit: int = 100) -> list[str]:
     return lines
 
 
-def generate_validation_summary_report(
+def generate_project_summary_report(
     db: Session, project: Project, *, generated_by_id: str | None = None,
 ) -> Report:
     metrics = compute_project_dashboard(db, project.id)
     gap_rows = compute_gap_analysis(db, project.id, metrics["current_stage"])
     open_gap_rows = [row for row in gap_rows if row["gap"] != "None"]
 
-    narrative = ValidationReportGeneration().run(
+    narrative = ProjectSummaryGeneration().run(
         project_name=project.name,
         lifecycle_readiness_pct=metrics["lifecycle_readiness_pct"],
         inspection_readiness_index_pct=metrics["inspection_readiness_index_pct"],
@@ -64,7 +67,7 @@ def generate_validation_summary_report(
 
     generated_at = datetime.now(timezone.utc)
     lines = [
-        f"# Validation Summary Report — {project.name}",
+        f"# Current Project Summary Report — {project.name}",
         "",
         f"**Generated:** {generated_at.strftime('%Y-%m-%d %H:%M UTC')}  ",
         f"**Project code:** {project.code}  ",
@@ -105,7 +108,7 @@ def generate_validation_summary_report(
     settings = get_settings()
     dest_dir = os.path.join(settings.storage_root, "generated_reports", project.id)
     os.makedirs(dest_dir, exist_ok=True)
-    filename = f"validation-summary-{generated_at.strftime('%Y%m%d%H%M%S')}.md"
+    filename = f"project-summary-{generated_at.strftime('%Y%m%d%H%M%S')}.md"
     dest_path = os.path.join(dest_dir, filename)
     with open(dest_path, "w") as f:
         f.write(content)
@@ -113,7 +116,7 @@ def generate_validation_summary_report(
     return ReportService(db).record_generated(
         project_id=project.id,
         generated_by_id=generated_by_id,
-        report_type=REPORT_TYPE_VALIDATION_SUMMARY,
-        title=f"Validation Summary Report — {project.name}",
+        report_type=REPORT_TYPE_PROJECT_SUMMARY,
+        title=f"Current Project Summary Report — {project.name}",
         file_path=dest_path,
     )
