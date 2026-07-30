@@ -1,3 +1,4 @@
+import json
 from functools import lru_cache
 
 from anthropic import Anthropic
@@ -22,6 +23,39 @@ def complete(system: str, user: str, *, max_tokens: int = 1024) -> str:
         messages=[{"role": "user", "content": user}],
     )
     return "".join(block.text for block in response.content if block.type == "text")
+
+
+def _coerce_to_schema(value: dict, schema: dict) -> dict:
+    """Despite forced tool-use, models occasionally return a nested array/object
+    property re-encoded as a JSON string instead of the actual structure --
+    sometimes even re-wrapping the whole enclosing object inside that string
+    under the same key again (e.g. {"steps": "{\"steps\": [...]}"}"). This is a
+    known, intermittent failure mode, not specific to any one caller, since it
+    can happen on any array/object-typed field of any complete_json() caller.
+    Walk the top-level properties the schema declares as array/object and
+    unwrap up to a few levels of re-stringification/re-nesting so callers can
+    trust the declared shape."""
+    properties = schema.get("properties", {})
+    for key, prop_schema in properties.items():
+        if key not in value:
+            continue
+        expected_type = prop_schema.get("type")
+        if expected_type not in ("array", "object"):
+            continue
+        current = value[key]
+        for _ in range(3):
+            if isinstance(current, str):
+                try:
+                    current = json.loads(current)
+                except (json.JSONDecodeError, TypeError):
+                    break
+                continue
+            if expected_type == "array" and isinstance(current, dict) and key in current:
+                current = current[key]
+                continue
+            break
+        value[key] = current
+    return value
 
 
 def complete_json(system: str, user: str, *, schema: dict, tool_name: str = "record_data",
@@ -54,5 +88,5 @@ def complete_json(system: str, user: str, *, schema: dict, tool_name: str = "rec
         )
     for block in response.content:
         if block.type == "tool_use":
-            return block.input
+            return _coerce_to_schema(block.input, schema)
     raise ValueError("Model response did not include the expected tool_use block")

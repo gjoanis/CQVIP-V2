@@ -441,6 +441,38 @@ h3 {
   user-select: none;
 }
 
+/* Traceability matrix -- a real requirement x protocol grid, not a flat list */
+.trace-matrix th:not(.trace-matrix-corner) {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.trace-matrix-corner {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--color-surface);
+  min-width: 220px;
+  box-shadow: 1px 0 0 var(--color-border);
+}
+
+.data-table th.trace-matrix-corner {
+  background: #fafbfc;
+  z-index: 2;
+}
+
+.trace-req-title {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.trace-cell {
+  text-align: center;
+  font-size: 1rem;
+}
+
 .data-table th.sortable:hover {
   color: var(--color-text);
 }
@@ -485,6 +517,7 @@ h3 {
 .badge-completed,
 .badge-active,
 .badge-low,
+.badge-covered,
 .badge-green {
   background: #ecfdf3;
   color: #067647;
