@@ -42,9 +42,39 @@ def generate_report(
 
 @router.get("/{report_id}/download")
 def download_report(report_id: str, project_id: str = Depends(require_project_owner), db: Session = Depends(get_db)):
-    report = ReportService(db).get(report_id)
+    report = ReportService(db).get_in_project(project_id, report_id)
     if not os.path.exists(report.file_path):
         raise HTTPException(404, "Report file not found on disk")
     return FileResponse(
         report.file_path, filename=os.path.basename(report.file_path), media_type="text/markdown",
     )
+
+
+class ReportContentOut(BaseModel):
+    content: str
+
+
+class ReportContentIn(BaseModel):
+    content: str
+
+
+@router.get("/{report_id}/content", response_model=ReportContentOut)
+def get_report_content(
+    report_id: str, project_id: str = Depends(require_project_owner), db: Session = Depends(get_db),
+):
+    service = ReportService(db)
+    report = service.get_in_project(project_id, report_id)
+    if not os.path.exists(report.file_path):
+        raise HTTPException(404, "Report file not found on disk")
+    return ReportContentOut(content=service.read_content(report))
+
+
+@router.put("/{report_id}/content", response_model=ReportContentOut)
+def update_report_content(
+    payload: ReportContentIn, report_id: str, project_id: str = Depends(require_project_owner),
+    db: Session = Depends(get_db),
+):
+    service = ReportService(db)
+    report = service.get_in_project(project_id, report_id)
+    service.write_content(report, payload.content)
+    return ReportContentOut(content=payload.content)

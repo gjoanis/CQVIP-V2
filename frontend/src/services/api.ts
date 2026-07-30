@@ -143,6 +143,10 @@ export const reportsApi = {
       `/projects/${projectId}/reports/${report.id}/download`,
       report.file_path.split("/").pop(),
     ),
+  getContent: (projectId: string, reportId: string) =>
+    api.get<{ content: string }>(`/projects/${projectId}/reports/${reportId}/content`),
+  updateContent: (projectId: string, reportId: string, content: string) =>
+    api.put<{ content: string }>(`/projects/${projectId}/reports/${reportId}/content`, { content }),
 };
 
 // Above this size, a single upload request is fragile: it stays open for
