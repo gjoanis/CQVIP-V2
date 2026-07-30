@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
+from app.models.user import User
 from app.workflows.dashboard_metrics import compute_dashboard_metrics
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -31,5 +32,5 @@ class PortfolioDashboardOut(BaseModel):
 
 
 @router.get("", response_model=PortfolioDashboardOut)
-def get_dashboard(db: Session = Depends(get_db)):
-    return compute_dashboard_metrics(db)
+def get_dashboard(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return compute_dashboard_metrics(db, current_user.id)

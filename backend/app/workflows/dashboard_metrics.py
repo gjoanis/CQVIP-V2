@@ -21,8 +21,8 @@ def _count(db: Session, model, project_id: str) -> int:
     ).scalar_one()
 
 
-def compute_dashboard_metrics(db: Session) -> dict:
-    projects = list(db.execute(select(Project)).scalars().all())
+def compute_dashboard_metrics(db: Session, owner_id: str) -> dict:
+    projects = list(db.execute(select(Project).where(Project.owner_id == owner_id)).scalars().all())
     clients_by_id = {c.id: c for c in db.execute(select(Client)).scalars().all()}
 
     project_rows = []
