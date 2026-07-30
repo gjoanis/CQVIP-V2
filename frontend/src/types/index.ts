@@ -284,6 +284,40 @@ export interface KnowledgeDocument {
 
 export type KnowledgeTaxonomy = Record<string, string[]>;
 
+export type FmeaStatus = "draft" | "in_review" | "approved";
+
+export interface FmeaAnalysis {
+  id: string;
+  project_id: string;
+  system_id: string;
+  title: string;
+  description: string;
+  status: FmeaStatus;
+}
+
+export interface FmeaLineItem {
+  id: string;
+  fmea_id: string;
+  order: number;
+  process_step: string;
+  potential_failure_mode: string;
+  potential_effect: string;
+  severity: number;
+  potential_cause: string;
+  occurrence: number;
+  current_controls: string;
+  detection: number;
+  rpn: number;
+  recommended_action: string;
+  action_owner_id: string | null;
+  target_date: string | null;
+  action_taken: string;
+  resulting_severity: number | null;
+  resulting_occurrence: number | null;
+  resulting_detection: number | null;
+  resulting_rpn: number | null;
+}
+
 export interface Role {
   id: string;
   name: string;

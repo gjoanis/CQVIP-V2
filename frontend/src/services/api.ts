@@ -5,6 +5,8 @@ import type {
   CoverageSummary,
   DashboardMetrics,
   DocumentItem,
+  FmeaAnalysis,
+  FmeaLineItem,
   GapAnalysisRow,
   GeneratedProtocol,
   KnowledgeDocument,
@@ -167,6 +169,21 @@ export const knowledgeApi = {
   },
   deleteDocument: (documentId: string, collection: string) =>
     api.del(`/knowledge/documents/${documentId}?collection=${encodeURIComponent(collection)}`),
+};
+
+export const fmeaApi = {
+  list: (projectId: string) => api.get<FmeaAnalysis[]>(`/fmea?project_id=${projectId}`),
+  get: (id: string) => api.get<FmeaAnalysis>(`/fmea/${id}`),
+  create: (data: Partial<FmeaAnalysis>) => api.post<FmeaAnalysis>("/fmea", data),
+  update: (id: string, data: Partial<FmeaAnalysis>) => api.put<FmeaAnalysis>(`/fmea/${id}`, data),
+  listItems: (fmeaId: string) => api.get<FmeaLineItem[]>(`/fmea/${fmeaId}/items`),
+  createItem: (fmeaId: string, processStep: string, order: number) =>
+    api.post<FmeaLineItem>(`/fmea/${fmeaId}/items`, { process_step: processStep, order }),
+  updateItem: (fmeaId: string, itemId: string, data: Partial<FmeaLineItem>) =>
+    api.put<FmeaLineItem>(`/fmea/${fmeaId}/items/${itemId}`, data),
+  deleteItem: (fmeaId: string, itemId: string) => api.del(`/fmea/${fmeaId}/items/${itemId}`),
+  aiSuggest: (fmeaId: string, itemId: string) =>
+    api.post<FmeaLineItem>(`/fmea/${fmeaId}/items/${itemId}/ai-suggest`),
 };
 
 export const administrationApi = {

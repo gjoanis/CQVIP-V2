@@ -15,6 +15,7 @@ from app.models.document import Document  # noqa: F401
 from app.models.requirement import Requirement  # noqa: F401
 from app.models.requirement_relationship import RequirementRelationship  # noqa: F401
 from app.models.risk import Risk  # noqa: F401
+from app.models.fmea import FmeaAnalysis, FmeaLineItem  # noqa: F401
 from app.models.validation_activity import ValidationActivity  # noqa: F401
 from app.models.protocol import Protocol  # noqa: F401
 from app.models.test_step import TestStep  # noqa: F401
@@ -43,6 +44,8 @@ __all__ = [
     "Requirement",
     "RequirementRelationship",
     "Risk",
+    "FmeaAnalysis",
+    "FmeaLineItem",
     "ValidationActivity",
     "Protocol",
     "TestStep",

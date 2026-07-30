@@ -811,6 +811,77 @@ a:focus-visible {
   margin-bottom: 14px;
 }
 
+/* Process FMEA worksheet */
+.fmea-step-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.12s ease;
+}
+
+.fmea-step-input:hover {
+  background: #fafbff;
+}
+
+.fmea-step-input:focus {
+  outline: none;
+  background: var(--color-primary-soft);
+}
+
+.fmea-textarea {
+  width: 100%;
+  min-height: 56px;
+  resize: vertical;
+  padding: 9px 11px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-family: inherit;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.fmea-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.fmea-sod-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fmea-sod-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.fmea-sod-row select {
+  padding: 7px 9px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-family: inherit;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
 .requirement-groups {
   display: flex;
   flex-direction: column;
@@ -1163,5 +1234,13 @@ a:focus-visible {
 
   .form-inline .form-row {
     min-width: 0;
+  }
+
+  .fmea-step-input {
+    flex-basis: 100%;
+  }
+
+  .fmea-sod-row {
+    gap: 12px;
   }
 }

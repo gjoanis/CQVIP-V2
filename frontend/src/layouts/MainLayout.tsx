@@ -31,6 +31,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/documents", label: "Documents" },
       { to: "/requirements", label: "Requirements" },
       { to: "/risks", label: "Risk Register" },
+      { to: "/fmea", label: "Process FMEA" },
       { to: "/traceability", label: "Traceability Matrix" },
       { to: "/validation", label: "Validation Activities" },
       { to: "/reports", label: "Reports" },

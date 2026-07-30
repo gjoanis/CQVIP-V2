@@ -44,3 +44,17 @@ def require_project_owner(
     binds by parameter name the same way a route handler's own params would."""
     verify_project_access(project_id, current_user, db)
     return project_id
+
+
+def require_fmea_owner(
+    fmea_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db),
+) -> str:
+    """Same idea as require_project_owner, but for routes nested under
+    /fmea/{fmea_id}/... -- resolves the FMEA's project and checks that."""
+    from app.repositories.fmea_repository import FmeaAnalysisRepository
+
+    fmea = FmeaAnalysisRepository(db).get(fmea_id)
+    if fmea is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "FMEA not found")
+    verify_project_access(fmea.project_id, current_user, db)
+    return fmea_id

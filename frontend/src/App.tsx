@@ -9,9 +9,11 @@ import { Clients } from "./pages/Clients";
 import { Dashboard } from "./pages/Dashboard";
 import { DocumentView } from "./pages/DocumentView";
 import { Documents } from "./pages/Documents";
+import { FmeaWorksheet } from "./pages/FmeaWorksheet";
 import { KnowledgeLibrary } from "./pages/KnowledgeLibrary";
 import { Login } from "./pages/Login";
 import { Notifications } from "./pages/Notifications";
+import { ProcessFmea } from "./pages/ProcessFmea";
 import { ProjectDashboard } from "./pages/ProjectDashboard";
 import { ProjectWorkspace } from "./pages/ProjectWorkspace";
 import { Projects } from "./pages/Projects";
@@ -59,6 +61,8 @@ export default function App() {
           <Route path="requirements" element={<Requirements />} />
           <Route path="requirements/:id" element={<RequirementWorkspace />} />
           <Route path="risks" element={<RiskRegister />} />
+          <Route path="fmea" element={<ProcessFmea />} />
+          <Route path="fmea/:id" element={<FmeaWorksheet />} />
           <Route path="traceability" element={<TraceabilityMatrix />} />
           <Route path="validation" element={<ValidationActivities />} />
           <Route path="reports" element={<Reports />} />

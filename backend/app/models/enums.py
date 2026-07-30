@@ -107,6 +107,12 @@ class CAPAStatus(str, enum.Enum):
     CLOSED = "closed"
 
 
+class FmeaStatus(str, enum.Enum):
+    DRAFT = "draft"
+    IN_REVIEW = "in_review"
+    APPROVED = "approved"
+
+
 class NotificationType(str, enum.Enum):
     INFO = "info"
     DEADLINE = "deadline"

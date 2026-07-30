@@ -11,6 +11,7 @@ from app.api.routes import (
     clients,
     dashboard,
     documents,
+    fmea,
     knowledge_library,
     notifications,
     project_dashboard,
@@ -107,6 +108,7 @@ app.include_router(systems.router)
 app.include_router(documents.router)
 app.include_router(requirements.router)
 app.include_router(risk_register.router)
+app.include_router(fmea.router)
 app.include_router(traceability.router)
 app.include_router(validation_activities.router)
 app.include_router(reports.router)
