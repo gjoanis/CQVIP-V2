@@ -56,6 +56,18 @@ def update_project(
     return ProjectService(db).update(project_id, **payload.model_dump())
 
 
+@router.delete("/{project_id}")
+def delete_project(
+    project_id: str = Depends(require_project_owner),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Wipes everything inside the project and deletes the project itself
+    (and its client, if this was that client's only project)."""
+    result = ProjectService(db).delete(project_id, actor_user_id=current_user.id)
+    return {"project_id": project_id, **result}
+
+
 @router.post("/{project_id}/reset")
 def reset_project_data(
     project_id: str = Depends(require_project_owner),
