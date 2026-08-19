@@ -18,6 +18,7 @@ export function ProcessFmea() {
   const [systemId, setSystemId] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
 
   function load(projectId: string) {
     setLoading(true);
@@ -50,6 +51,17 @@ export function ProcessFmea() {
       setError(err instanceof ApiError ? err.message : "Failed to create Process FMEA");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(fmeaId: string) {
+    setError(null);
+    try {
+      await fmeaApi.remove(fmeaId);
+      setDeletePendingId(null);
+      setAnalyses((prev) => prev.filter((a) => a.id !== fmeaId));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete Process FMEA");
     }
   }
 
@@ -134,6 +146,24 @@ export function ProcessFmea() {
               header: "Status",
               render: (a) => <span className={`badge badge-${a.status}`}>{a.status.replace(/_/g, " ")}</span>,
               sortValue: (a) => a.status,
+            },
+            {
+              header: "",
+              render: (a) =>
+                deletePendingId === a.id ? (
+                  <span className="inline-confirm">
+                    <button className="btn-danger" onClick={() => handleDelete(a.id)}>
+                      Confirm
+                    </button>
+                    <button className="btn-link" onClick={() => setDeletePendingId(null)}>
+                      Cancel
+                    </button>
+                  </span>
+                ) : (
+                  <button className="btn-link" onClick={() => setDeletePendingId(a.id)}>
+                    Delete
+                  </button>
+                ),
             },
           ]}
         />

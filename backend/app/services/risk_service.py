@@ -23,6 +23,9 @@ class RiskService:
         risk.risk_score = self._score(risk)
         return self.repo.update(risk, risk_score=risk.risk_score)
 
+    def delete(self, risk_id: str) -> None:
+        self.repo.delete(self.repo.get_or_404(risk_id))
+
     @staticmethod
     def _score(risk: Risk) -> int:
         sev = _SEVERITY_WEIGHT.get(getattr(risk.severity, "value", risk.severity), 2)

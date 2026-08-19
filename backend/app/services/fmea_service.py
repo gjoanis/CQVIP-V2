@@ -61,6 +61,11 @@ class FmeaService:
     def delete_item(self, fmea_id: str, item_id: str) -> None:
         self.items.delete(self.get_item_in_fmea(fmea_id, item_id))
 
+    def delete(self, fmea_id: str) -> None:
+        for item in self.list_items(fmea_id):
+            self.items.delete(item)
+        self.analyses.delete(self.get(fmea_id))
+
     @staticmethod
     def _rpn(severity: int, occurrence: int, detection: int) -> int:
         return severity * occurrence * detection

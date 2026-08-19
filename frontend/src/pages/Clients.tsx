@@ -12,6 +12,7 @@ export function Clients() {
   const [name, setName] = useState("");
   const [industry, setIndustry] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
 
   function load() {
     setLoading(true);
@@ -37,6 +38,21 @@ export function Clients() {
       setError(err instanceof ApiError ? err.message : "Failed to create client");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(clientId: string) {
+    setError(null);
+    try {
+      await clientsApi.remove(clientId);
+      setDeletePendingId(null);
+      setClients((prev) => prev.filter((c) => c.id !== clientId));
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message || "Failed to delete client -- it may still have projects attached"
+          : "Failed to delete client",
+      );
     }
   }
 
@@ -72,6 +88,24 @@ export function Clients() {
             { header: "Name", render: (c) => c.name, sortValue: (c) => c.name },
             { header: "Industry", render: (c) => c.industry || "—", sortValue: (c) => c.industry },
             { header: "Contact", render: (c) => c.contact_email || "—", sortValue: (c) => c.contact_email },
+            {
+              header: "",
+              render: (c) =>
+                deletePendingId === c.id ? (
+                  <span className="inline-confirm">
+                    <button className="btn-danger" onClick={() => handleDelete(c.id)}>
+                      Confirm
+                    </button>
+                    <button className="btn-link" onClick={() => setDeletePendingId(null)}>
+                      Cancel
+                    </button>
+                  </span>
+                ) : (
+                  <button className="btn-link" onClick={() => setDeletePendingId(c.id)}>
+                    Delete
+                  </button>
+                ),
+            },
           ]}
         />
       )}

@@ -25,6 +25,10 @@ export function Projects() {
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [resetting, setResetting] = useState(false);
 
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
   function load() {
     setLoading(true);
     Promise.all([projectsApi.list(), clientsApi.list()])
@@ -109,6 +113,22 @@ export function Projects() {
     }
   }
 
+  async function handleDelete(project: Project) {
+    setDeleting(true);
+    setError(null);
+    try {
+      await projectsApi.remove(project.id);
+      setDeleteConfirmId(null);
+      setDeleteConfirmText("");
+      load();
+      refreshProjects();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete project");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -117,6 +137,8 @@ export function Projects() {
       <p className="page-subtitle">
         "Reset Project" permanently deletes every requirement, document, system, FMEA, protocol, and validation
         activity inside a project -- the project itself (name, client, dates) is kept so you can start it over.
+        "Delete Project" removes all of that plus the project itself, and its client too if this was their only
+        project.
       </p>
       {error && <div className="page-error">{error}</div>}
 
@@ -209,43 +231,86 @@ export function Projects() {
             },
             {
               header: "Danger Zone",
-              render: (p) =>
-                resetConfirmId === p.id ? (
-                  <div className="reset-confirm-row">
-                    <input
-                      placeholder={`Type "${p.code}" to confirm`}
-                      value={resetConfirmText}
-                      onChange={(e) => setResetConfirmText(e.target.value)}
-                      autoFocus
-                    />
+              render: (p) => {
+                if (resetConfirmId === p.id) {
+                  return (
+                    <div className="reset-confirm-row">
+                      <input
+                        placeholder={`Type "${p.code}" to confirm`}
+                        value={resetConfirmText}
+                        onChange={(e) => setResetConfirmText(e.target.value)}
+                        autoFocus
+                      />
+                      <button
+                        className="btn-danger"
+                        disabled={resetConfirmText !== p.code || resetting}
+                        onClick={() => handleReset(p)}
+                      >
+                        {resetting ? "Resetting..." : "Confirm Reset"}
+                      </button>
+                      <button
+                        className="btn-link"
+                        onClick={() => {
+                          setResetConfirmId(null);
+                          setResetConfirmText("");
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  );
+                }
+                if (deleteConfirmId === p.id) {
+                  return (
+                    <div className="reset-confirm-row">
+                      <input
+                        placeholder={`Type "${p.code}" to confirm`}
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        autoFocus
+                      />
+                      <button
+                        className="btn-danger"
+                        disabled={deleteConfirmText !== p.code || deleting}
+                        onClick={() => handleDelete(p)}
+                      >
+                        {deleting ? "Deleting..." : "Confirm Delete"}
+                      </button>
+                      <button
+                        className="btn-link"
+                        onClick={() => {
+                          setDeleteConfirmId(null);
+                          setDeleteConfirmText("");
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="danger-zone-actions">
                     <button
                       className="btn-danger"
-                      disabled={resetConfirmText !== p.code || resetting}
-                      onClick={() => handleReset(p)}
-                    >
-                      {resetting ? "Resetting..." : "Confirm Reset"}
-                    </button>
-                    <button
-                      className="btn-link"
                       onClick={() => {
-                        setResetConfirmId(null);
+                        setResetConfirmId(p.id);
                         setResetConfirmText("");
                       }}
                     >
-                      Cancel
+                      Reset Project
+                    </button>
+                    <button
+                      className="btn-danger"
+                      onClick={() => {
+                        setDeleteConfirmId(p.id);
+                        setDeleteConfirmText("");
+                      }}
+                    >
+                      Delete Project
                     </button>
                   </div>
-                ) : (
-                  <button
-                    className="btn-danger"
-                    onClick={() => {
-                      setResetConfirmId(p.id);
-                      setResetConfirmText("");
-                    }}
-                  >
-                    Reset Project
-                  </button>
-                ),
+                );
+              },
             },
           ]}
         />

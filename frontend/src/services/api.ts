@@ -58,6 +58,7 @@ export const projectsApi = {
   create: (data: Partial<Project>) => api.post<Project>("/projects", data),
   update: (id: string, data: Partial<Project>) => api.put<Project>(`/projects/${id}`, data),
   reset: (id: string) => api.post<{ project_id: string; deleted: Record<string, number> }>(`/projects/${id}/reset`),
+  remove: (id: string) => api.del(`/projects/${id}`),
 };
 
 export const projectWorkspaceApi = {
@@ -70,6 +71,7 @@ export const systemsApi = {
   list: (projectId: string) => api.get<SystemItem[]>(`/systems?project_id=${projectId}`),
   create: (data: Partial<SystemItem>) => api.post<SystemItem>("/systems", data),
   update: (id: string, data: Partial<SystemItem>) => api.put<SystemItem>(`/systems/${id}`, data),
+  remove: (id: string) => api.del(`/systems/${id}`),
 };
 
 export const documentsApi = {
@@ -93,6 +95,7 @@ export const requirementsApi = {
   get: (id: string) => api.get<Requirement>(`/requirements/${id}`),
   create: (data: Partial<Requirement>) => api.post<Requirement>("/requirements", data),
   update: (id: string, data: Partial<Requirement>) => api.put<Requirement>(`/requirements/${id}`, data),
+  remove: (id: string) => api.del(`/requirements/${id}`),
   setStatus: (id: string, status: RequirementStatus) =>
     api.patch<Requirement>(`/requirements/${id}/status`, { status }),
   setSystem: (id: string, systemId: string | null) =>
@@ -121,6 +124,7 @@ export const risksApi = {
   list: (projectId: string) => api.get<Risk[]>(`/risks?project_id=${projectId}`),
   create: (data: Partial<Risk>) => api.post<Risk>("/risks", data),
   update: (id: string, data: Partial<Risk>) => api.put<Risk>(`/risks/${id}`, data),
+  remove: (id: string) => api.del(`/risks/${id}`),
 };
 
 export const validationActivitiesApi = {
@@ -131,6 +135,7 @@ export const validationActivitiesApi = {
     api.put<ValidationActivity>(`/validation-activities/${id}`, data),
   seedStandardPhases: (projectId: string) =>
     api.post<ValidationActivity[]>(`/validation-activities/seed-standard-phases?project_id=${projectId}`),
+  remove: (id: string) => api.del(`/validation-activities/${id}`),
 };
 
 export const traceabilityApi = {
@@ -253,6 +258,7 @@ export const fmeaApi = {
   updateItem: (fmeaId: string, itemId: string, data: Partial<FmeaLineItem>) =>
     api.put<FmeaLineItem>(`/fmea/${fmeaId}/items/${itemId}`, data),
   deleteItem: (fmeaId: string, itemId: string) => api.del(`/fmea/${fmeaId}/items/${itemId}`),
+  remove: (id: string) => api.del(`/fmea/${id}`),
   aiSuggest: (fmeaId: string, itemId: string) =>
     api.post<FmeaLineItem>(`/fmea/${fmeaId}/items/${itemId}/ai-suggest`),
 };

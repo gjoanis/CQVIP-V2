@@ -86,3 +86,17 @@ def require_requirement_owner(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Requirement not found")
     verify_project_access(requirement.project_id, current_user, db)
     return requirement_id
+
+
+def require_risk_owner(
+    risk_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db),
+) -> str:
+    """Same idea as require_project_owner, but for routes nested under
+    /risks/{risk_id}/... -- resolves the risk's project and checks that."""
+    from app.repositories.risk_repository import RiskRepository
+
+    risk = RiskRepository(db).get(risk_id)
+    if risk is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Risk not found")
+    verify_project_access(risk.project_id, current_user, db)
+    return risk_id

@@ -19,6 +19,7 @@ export function RiskRegister() {
   const [severity, setSeverity] = useState<RiskSeverity>("medium");
   const [likelihood, setLikelihood] = useState<RiskSeverity>("medium");
   const [submitting, setSubmitting] = useState(false);
+  const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
 
   function load(projectId: string) {
     setLoading(true);
@@ -46,6 +47,17 @@ export function RiskRegister() {
       setError(err instanceof ApiError ? err.message : "Failed to create risk");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(riskId: string) {
+    setError(null);
+    try {
+      await risksApi.remove(riskId);
+      setDeletePendingId(null);
+      setRisks((prev) => prev.filter((r) => r.id !== riskId));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete risk");
     }
   }
 
@@ -118,6 +130,24 @@ export function RiskRegister() {
               header: "Status",
               render: (r) => <span className={`badge badge-${r.status}`}>{r.status}</span>,
               sortValue: (r) => r.status,
+            },
+            {
+              header: "",
+              render: (r) =>
+                deletePendingId === r.id ? (
+                  <span className="inline-confirm">
+                    <button className="btn-danger" onClick={() => handleDelete(r.id)}>
+                      Confirm
+                    </button>
+                    <button className="btn-link" onClick={() => setDeletePendingId(null)}>
+                      Cancel
+                    </button>
+                  </span>
+                ) : (
+                  <button className="btn-link" onClick={() => setDeletePendingId(r.id)}>
+                    Delete
+                  </button>
+                ),
             },
           ]}
         />

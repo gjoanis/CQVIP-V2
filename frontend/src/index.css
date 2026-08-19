@@ -676,6 +676,19 @@ a:focus-visible {
   min-width: 160px;
 }
 
+.danger-zone-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.inline-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
 .btn-link {
   background: none;
   border: none;

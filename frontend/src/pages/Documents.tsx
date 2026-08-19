@@ -35,6 +35,7 @@ export function Documents() {
   const [docType, setDocType] = useState(DOC_TYPES[0]);
   const [systemId, setSystemId] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function load(projectId: string) {
@@ -70,6 +71,18 @@ export function Documents() {
       setError(err instanceof ApiError ? err.message : "Failed to upload document");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleDelete(documentId: string) {
+    if (!currentProject) return;
+    setError(null);
+    try {
+      await documentsApi.delete(documentId);
+      setDeletePendingId(null);
+      setDocuments((prev) => prev.filter((d) => d.id !== documentId));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete document");
     }
   }
 
@@ -153,6 +166,24 @@ export function Documents() {
               header: "Status",
               render: (d) => <span className={`badge badge-${d.status}`}>{d.status}</span>,
               sortValue: (d) => d.status,
+            },
+            {
+              header: "",
+              render: (d) =>
+                deletePendingId === d.id ? (
+                  <span className="inline-confirm">
+                    <button className="btn-danger" onClick={() => handleDelete(d.id)}>
+                      Confirm
+                    </button>
+                    <button className="btn-link" onClick={() => setDeletePendingId(null)}>
+                      Cancel
+                    </button>
+                  </span>
+                ) : (
+                  <button className="btn-link" onClick={() => setDeletePendingId(d.id)}>
+                    Delete
+                  </button>
+                ),
             },
           ]}
         />

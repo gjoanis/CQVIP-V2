@@ -51,6 +51,7 @@ export function Requirements() {
   const [priority, setPriority] = useState<RequirementPriority>("medium");
   const [systemId, setSystemId] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
 
   function load(projectId: string) {
     setLoading(true);
@@ -106,6 +107,17 @@ export function Requirements() {
       setRequirements((prev) => prev.map((r) => (r.id === requirementId ? updated : r)));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to update status");
+    }
+  }
+
+  async function handleDelete(requirementId: string) {
+    setError(null);
+    try {
+      await requirementsApi.remove(requirementId);
+      setDeletePendingId(null);
+      setRequirements((prev) => prev.filter((r) => r.id !== requirementId));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete requirement");
     }
   }
 
@@ -188,6 +200,24 @@ export function Requirements() {
         </select>
       ),
       sortValue: (r: Requirement) => r.status,
+    },
+    {
+      header: "",
+      render: (r: Requirement) =>
+        deletePendingId === r.id ? (
+          <span className="inline-confirm">
+            <button className="btn-danger" onClick={(e) => { e.stopPropagation(); handleDelete(r.id); }}>
+              Confirm
+            </button>
+            <button className="btn-link" onClick={(e) => { e.stopPropagation(); setDeletePendingId(null); }}>
+              Cancel
+            </button>
+          </span>
+        ) : (
+          <button className="btn-link" onClick={(e) => { e.stopPropagation(); setDeletePendingId(r.id); }}>
+            Delete
+          </button>
+        ),
     },
   ];
 

@@ -40,6 +40,7 @@ export function ValidationActivities() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
 
   function load(projectId: string) {
     setLoading(true);
@@ -109,6 +110,17 @@ export function ValidationActivities() {
     } catch (err) {
       setActivities(previous);
       setError(err instanceof ApiError ? err.message : "Failed to update activity");
+    }
+  }
+
+  async function handleDelete(activityId: string) {
+    setError(null);
+    try {
+      await validationActivitiesApi.remove(activityId);
+      setDeletePendingId(null);
+      setActivities((prev) => prev.filter((a) => a.id !== activityId));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete activity");
     }
   }
 
@@ -236,6 +248,24 @@ export function ValidationActivities() {
                   />
                 ),
                 sortValue: (a) => a.end_date ?? "",
+              },
+              {
+                header: "",
+                render: (a) =>
+                  deletePendingId === a.id ? (
+                    <span className="inline-confirm">
+                      <button className="btn-danger" onClick={() => handleDelete(a.id)}>
+                        Confirm
+                      </button>
+                      <button className="btn-link" onClick={() => setDeletePendingId(null)}>
+                        Cancel
+                      </button>
+                    </span>
+                  ) : (
+                    <button className="btn-link" onClick={() => setDeletePendingId(a.id)}>
+                      Delete
+                    </button>
+                  ),
               },
             ]}
           />

@@ -102,6 +102,12 @@ def update_fmea(
     return FmeaService(db).update(fmea_id, title=payload.title, description=payload.description, status=payload.status)
 
 
+@router.delete("/{fmea_id}")
+def delete_fmea(fmea_id: str = Depends(require_fmea_owner), db: Session = Depends(get_db)):
+    FmeaService(db).delete(fmea_id)
+    return {"deleted": fmea_id}
+
+
 @router.get("/{fmea_id}/items", response_model=list[FmeaLineItemOut])
 def list_items(fmea_id: str = Depends(require_fmea_owner), db: Session = Depends(get_db)):
     return FmeaService(db).list_items(fmea_id)

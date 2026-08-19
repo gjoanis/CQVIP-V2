@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db, require_project_owner, verify_project_access
+from app.api.deps import get_current_user, get_db, require_project_owner, require_risk_owner, verify_project_access
 from app.models.enums import RiskSeverity, RiskStatus
 from app.models.user import User
 from app.services.risk_service import RiskService
@@ -41,5 +41,11 @@ def create_risk(payload: RiskIn, current_user: User = Depends(get_current_user),
 
 
 @router.put("/{risk_id}", response_model=RiskOut)
-def update_risk(risk_id: str, payload: RiskIn, db: Session = Depends(get_db)):
+def update_risk(payload: RiskIn, risk_id: str = Depends(require_risk_owner), db: Session = Depends(get_db)):
     return RiskService(db).update(risk_id, **payload.model_dump())
+
+
+@router.delete("/{risk_id}")
+def delete_risk(risk_id: str = Depends(require_risk_owner), db: Session = Depends(get_db)):
+    RiskService(db).delete(risk_id)
+    return {"deleted": risk_id}

@@ -20,6 +20,7 @@ export function Systems() {
   const [systemType, setSystemType] = useState<SystemType>("equipment");
   const [identifier, setIdentifier] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
 
   function load(projectId: string) {
     setLoading(true);
@@ -53,6 +54,17 @@ export function Systems() {
       setError(err instanceof ApiError ? err.message : "Failed to create system");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(systemId: string) {
+    setError(null);
+    try {
+      await systemsApi.remove(systemId);
+      setDeletePendingId(null);
+      setSystems((prev) => prev.filter((s) => s.id !== systemId));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete system");
     }
   }
 
@@ -122,6 +134,24 @@ export function Systems() {
               sortValue: (s) => s.system_type,
             },
             { header: "Location", render: (s) => s.location || "—", sortValue: (s) => s.location },
+            {
+              header: "",
+              render: (s) =>
+                deletePendingId === s.id ? (
+                  <span className="inline-confirm">
+                    <button className="btn-danger" onClick={() => handleDelete(s.id)}>
+                      Confirm
+                    </button>
+                    <button className="btn-link" onClick={() => setDeletePendingId(null)}>
+                      Cancel
+                    </button>
+                  </span>
+                ) : (
+                  <button className="btn-link" onClick={() => setDeletePendingId(s.id)}>
+                    Delete
+                  </button>
+                ),
+            },
           ]}
         />
       )}
