@@ -11,7 +11,7 @@ SYSTEM_PROMPT = (
 
 
 class ProjectSummaryGeneration(AICapability):
-    """Drafts the narrative portion of a project's Current Project Summary Report from
+    """Drafts the narrative portion of a project's Project Life Cycle Report from
     its live readiness metrics and gap analysis."""
 
     def run(

@@ -7,8 +7,8 @@ import { ApiError } from "../services/apiClient";
 import type { Report } from "../types";
 
 const REPORT_TYPE_LABELS: Record<string, string> = {
-  project_summary: "Current Project Summary",
-  validation_summary: "Current Project Summary", // legacy value from before the rename
+  project_summary: "Project Life Cycle",
+  validation_summary: "Project Life Cycle", // legacy value from before the renames
 };
 
 function reportTypeLabel(reportType: string): string {
@@ -122,7 +122,7 @@ export function Reports() {
       <div className="page-header">
         <h1>Reports — {currentProject.name}</h1>
         <button className="btn" disabled={generating} onClick={handleGenerate}>
-          {generating ? "Generating..." : "Generate Current Project Summary Report"}
+          {generating ? "Generating..." : "Generate Project Life Cycle Report"}
         </button>
       </div>
       {error && <div className="page-error">{error}</div>}
@@ -133,7 +133,7 @@ export function Reports() {
         <DataTable
           rows={reports}
           rowKey={(r) => r.id}
-          emptyMessage="No reports generated yet. Click Generate Current Project Summary Report above."
+          emptyMessage="No reports generated yet. Click Generate Project Life Cycle Report above."
           columns={[
             { header: "Title", render: (r) => r.title, sortValue: (r) => r.title },
             { header: "Type", render: (r) => reportTypeLabel(r.report_type), sortValue: (r) => r.report_type },

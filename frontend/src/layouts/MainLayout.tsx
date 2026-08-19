@@ -21,6 +21,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/clients", label: "Clients" },
       { to: "/projects", label: "Projects" },
+      { to: "/trends", label: "Trends & Best Practices" },
       { to: "/workspace", label: "Project Workspace" },
       { to: "/systems", label: "Systems & Processes" },
     ],

@@ -12,7 +12,9 @@ import type {
   GeneratedProtocol,
   KnowledgeDocument,
   KnowledgeTaxonomy,
+  Leaderboard,
   Notification,
+  PortfolioTrends,
   Project,
   ProjectDashboard,
   ProjectNode,
@@ -31,6 +33,8 @@ import type {
 
 export const dashboardApi = {
   get: () => api.get<DashboardMetrics>("/dashboard"),
+  trends: (weeks = 12) => api.get<PortfolioTrends>(`/dashboard/trends?weeks=${weeks}`),
+  leaderboard: () => api.get<Leaderboard>("/dashboard/leaderboard"),
 };
 
 export const projectDashboardApi = {

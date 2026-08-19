@@ -1,5 +1,5 @@
-"""Generates the Current Project Summary Report: a Markdown document combining
-a real Claude-written narrative with the live readiness metrics and gap
+"""Generates the Project Life Cycle Report: a Markdown document combining a
+real Claude-written narrative with the live readiness metrics and gap
 analysis already computed for the project dashboard
 (app.workflows.project_readiness), saved to storage/generated_reports/ and
 recorded as a Report row. Deliberately not called a "Validation Summary
@@ -67,7 +67,7 @@ def generate_project_summary_report(
 
     generated_at = datetime.now(timezone.utc)
     lines = [
-        f"# Current Project Summary Report — {project.name}",
+        f"# Project Life Cycle Report — {project.name}",
         "",
         f"**Generated:** {generated_at.strftime('%Y-%m-%d %H:%M UTC')}  ",
         f"**Project code:** {project.code}  ",
@@ -90,7 +90,7 @@ def generate_project_summary_report(
 
     lines += [
         "",
-        "## Requirements Summary",
+        "## Requirements Status",
         "",
         f"- Total requirements: {metrics['total_requirements']}",
         f"- Critical/high priority still open: {metrics['critical_or_high_open']}",
@@ -108,7 +108,7 @@ def generate_project_summary_report(
     settings = get_settings()
     dest_dir = os.path.join(settings.storage_root, "generated_reports", project.id)
     os.makedirs(dest_dir, exist_ok=True)
-    filename = f"project-summary-{generated_at.strftime('%Y%m%d%H%M%S')}.md"
+    filename = f"project-lifecycle-{generated_at.strftime('%Y%m%d%H%M%S')}.md"
     dest_path = os.path.join(dest_dir, filename)
     with open(dest_path, "w") as f:
         f.write(content)
@@ -117,6 +117,6 @@ def generate_project_summary_report(
         project_id=project.id,
         generated_by_id=generated_by_id,
         report_type=REPORT_TYPE_PROJECT_SUMMARY,
-        title=f"Current Project Summary Report — {project.name}",
+        title=f"Project Life Cycle Report — {project.name}",
         file_path=dest_path,
     )

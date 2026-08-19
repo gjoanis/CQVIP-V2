@@ -219,6 +219,43 @@ export interface DashboardMetrics {
   open_risks: number;
 }
 
+export interface TrendPoint {
+  date: string;
+  requirements_total: number;
+  requirements_verified: number;
+  lifecycle_readiness_pct: number;
+  open_risks: number;
+}
+
+export interface ProjectTrend {
+  id: string;
+  code: string;
+  name: string;
+  points: TrendPoint[];
+}
+
+export interface PortfolioTrends {
+  weeks: number;
+  projects: ProjectTrend[];
+}
+
+export interface LeaderboardRow {
+  id: string;
+  code: string;
+  name: string;
+  requirement_count: number;
+  requirement_verified_count: number;
+  requirement_verification_rate_pct: number;
+  avg_requirement_verification_days: number | null;
+  risk_count: number;
+  closed_risk_count: number;
+  avg_risk_closure_days: number | null;
+}
+
+export interface Leaderboard {
+  projects: LeaderboardRow[];
+}
+
 export type ProjectHealth = "red" | "yellow" | "green";
 
 export interface PhaseReadiness {

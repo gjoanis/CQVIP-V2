@@ -24,6 +24,7 @@ import { RiskRegister } from "./pages/RiskRegister";
 import { Settings } from "./pages/Settings";
 import { Systems } from "./pages/Systems";
 import { TraceabilityMatrix } from "./pages/TraceabilityMatrix";
+import { Trends } from "./pages/Trends";
 import { UserManagement } from "./pages/UserManagement";
 import { ValidationActivities } from "./pages/ValidationActivities";
 
@@ -51,6 +52,7 @@ export default function App() {
           }
         >
           <Route index element={<Dashboard />} />
+          <Route path="trends" element={<Trends />} />
           <Route path="clients" element={<Clients />} />
           <Route path="projects" element={<Projects />} />
           <Route path="projects/:projectId/dashboard" element={<ProjectDashboard />} />
